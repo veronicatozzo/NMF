@@ -9,7 +9,6 @@ from scipy import signal
 import matplotlib.pyplot as pp
 import random
 import NMF
-import non_negative_sparse_coding
 
 
 #generates true patterns with 96 features
@@ -53,15 +52,14 @@ V = np.dot(atoms, coefficients)
 
 
 #add noise
-V_tilde = V + abs(np.random.normal(0, 1, (number_of_features, number_of_samples)))
+V_tilde = V + np.random.normal(0, 0.5, (number_of_features, number_of_samples))
+V_tilde[np.where(V_tilde < 0)] = 0 
 
 #run decomposition
 #res = NMF.non_negative_matrix_factorization(V_tilde, 10)
 _lambda = 0.1
 k = 11
-res = non_negative_sparse_coding.non_negative_sparse_matrix_factorization(V, k, _lambda)
-retrieved_atoms = res["atoms"]
-retrieved_coefficients = res["coefficients"]
+retrieved_atoms, retrieved_coefficients = NMF.non_negative_matrix_factorization(V_tilde, k)#, _lambda)
 #check results
 
 for i in range(0, k):
