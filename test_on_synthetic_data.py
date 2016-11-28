@@ -30,10 +30,10 @@ atoms[0:50, 6] = 0
 sums = np.sum(atoms, axis = 0)
 atoms = atoms/sums
 
-for i in range(0, 7):
- pp.figure()
- pp.plot(atoms[:, i])
- pp.show()
+#for i in range(0, 7):
+# pp.figure()
+# pp.plot(atoms[:, i])
+# pp.show()
  
  
 
@@ -59,7 +59,7 @@ V_tilde[np.where(V_tilde < 0)] = 0
 #res = NMF.non_negative_matrix_factorization(V_tilde, 10)
 _lambda = 0.1
 k = 11
-retrieved_atoms, retrieved_coefficients = NMF.non_negative_matrix_factorization(V_tilde, k)#, _lambda)
+retrieved_atoms, retrieved_coefficients = NMF.nmf_sparsness_constraint_hoyer(V_tilde, k, atoms_sparseness=0.1, coefficients_sparseness=0.1)#, _lambda)
 #check results
 
 for i in range(0, k):

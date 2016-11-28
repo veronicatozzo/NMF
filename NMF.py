@@ -38,8 +38,8 @@ def non_negative_matrix_factorization(V, k):
         H_old = H
         
         #iterate
-        H = H * np.dot(np.transpose(W), V)/np.dot(np.dot(np.transpose(W),W),H)
-        W = W * np.dot(V, np.transpose(H))/np.dot(np.dot(W, H), np.transpose(H))
+        H = H * np.dot(W.T, V)/np.dot(np.dot(W.T,W),H)
+        W = W * np.dot(V, H.T)/np.dot(np.dot(W, H), H.T)
         
         #difference
         diff_W = np.linalg.norm(W - W_old, ord = 'fro')
@@ -90,12 +90,12 @@ def non_negative_sparse_matrix_factorization(V, k, _lambda):
         H_old = H
         
         #iterate
-        W = W - mu* np.dot(np.dot(W, H) - V, np.transpose(H))
+        W = W - mu* np.dot(np.dot(W, H) - V, H.T)
         W[np.where(W < 0)] = 0
         sums = np.sum(W, axis = 0)
         W = W/sums
         
-        H = H * np.dot(np.transpose(W), V) / (np.dot(np.dot(np.transpose(W), W), H) + _lambda)
+        H = H * np.dot(W.T, V) / (np.dot(np.dot(W.T, W), H) + _lambda)
         
         #difference
         diff_W = np.sum((W - W_old)**2)
@@ -115,108 +115,142 @@ def non_negative_sparse_matrix_factorization(V, k, _lambda):
     
     
     
-def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness=None, coefficients_sparseness=None, coefficients_norm=None):
+def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparseness):
     if np.min(V) < 0:
         raise ValueError("The argument matrix is not positive")
     
     d = np.shape(V)[0]
     n = np.shape(V)[1]
+    
+    #rescale matrix to avoid overflow and underflow 
+    V = V/np.max(V)
 
     #create and initialize two matrices with random numbers between 0 and 1
     W = np.random.random((d, k))
     H = np.random.random((k, n))
-    atoms_sparsity = atoms_sparseness != None
-    coefficients_sparsity = coefficients_sparseness != None    
     
-    if(atoms_sparsity):
-        W = project_columns(W, atoms_sparseness)
+    #project matrices to have specific norm and sparseness
+    L1_W = math.sqrt(d) - (math.sqrt(d) - 1)*atoms_sparseness
+    W = project_columns(W, L1_W, None)
+    L1_H = math.sqrt(n) - (math.sqrt(n) - 1)*coefficients_sparseness        
+    H = project_rows(H, L1_H, 1)
     
-    if(coefficients_sparsity):
-        H = project_rows(H, coefficients_sparseness, coefficients_norm)
+    #compute initial reconstruction error
+    reconstruction_error = 0.5 * np.sum((V - np.dot(W, H))**2)
     
+    stepsize_W    = 1 
+    stepsize_H    = 1
     
-    epsilon = 0.00001
-    mu_W    = 0.000001 # maybe we should use adaptive steps
-    mu_H    = 0.000001
-    
-    
-    for iteration in range(1, 100000):    
+    iteration = 0
+    while True:
         
         W_old = W
         H_old = H
         
-        #iterate
-        if(atoms_sparsity):
-            W = W - mu_W * np.dot(np.dot(W, H) - V, np.transpose(H))
-            W = project_columns(W, atoms_sparseness)
-        else:
-            W = W * np.dot(V, np.transpose(H)) / np.dot(np.dot(W, H), np.transpose(H))
-        
-        
-        if(coefficients_sparsity):
-            H = H - mu_H * np.dot(np.transpose(W),np.dot(W, H) -V)
-            H = project_rows(H, coefficients_sparseness, coefficients_norm)
-        else:
-            H = H * np.dot(np.transpose(W), V) / np.dot(np.transpose(W), np.dot(W, H))
+        #update H, matrix of coefficients
+        dH        = np.dot(W.T, np.dot(W, H)-V)
+        old_error = reconstruction_error        
+
+        while True:
+            Hnew = H - stepsize_H * dH
+            Hnew = project_columns(H, L1_H, 1)
             
+            new_error = 0.5 * np.sum((V - np.dot(W, Hnew))**2)
+            if new_error <= old_error:
+                break
             
-        #difference
-        diff_W = np.sum((W - W_old)**2)
-        diff_H = np.sum((H - H_old)**2)
+            stepsize_H = stepsize_H/2
+            if stepsize_H < 1e-200:
+                return W, H#algorithm has converged
         
+        stepsize_H = stepsize_H*1.2 #increase slightly the stepsize
+        H = Hnew
+        
+        
+        #update W, matrix of coefficients
+        dW        = np.dot(np.dot(W, H) -  V, H.T)
+        old_error = reconstruction_error        
+
+        while True:
+            Wnew = W - stepsize_W * dW
+            Wnew = project_rows(W, L1_W, None)
+            
+            new_error = 0.5 * np.sum((V - np.dot(Wnew, H))**2)
+            if new_error <= old_error:
+                break
+            
+            stepsize_W = stepsize_W/2
+            if stepsize_W < 1e-200:
+                return W, H #algorithm has converged
+        
+        stepsize_W = stepsize_W*1.2 #increase slightly the stepsize
+        W = Wnew
+        
+        
+        reconstruction_error = 0.5 * np.sum((V - np.dot(W, H))**2)
         print("Iteration:", iteration)
-        print("difference W:", diff_W)
-        print("difference_H:", diff_H)
-        #check convergence
-        if diff_W <  epsilon and diff_H < epsilon:
-            print("W difference", diff_W)
-            print("H difference", diff_H)
-            break
+        print("Reconstruction error", reconstruction_error)
     
     
     
 
 
-def project_columns(matrix, sparseness):
-   return None
+def project_columns(matrix, sparseness, norm):
+    
+    new_matrix = np.zeros_like(matrix)    
+    
+    for i in range(0, matrix.shape[1]):
+        new_matrix[:,i] = project_vector(matrix[:,i], sparseness, None)
+    
+    return new_matrix
+    
    
    
 def project_rows(matrix, sparseness, norm):
-    return None
+    
+    new_matrix = np.zeros_like(matrix)    
+    
+    for i in range(0, matrix.shape[0]):
+        new_matrix[i,:] = project_vector(matrix[i,:], sparseness, norm)
+    
+    return new_matrix
     
     
     
 def project_vector(x, L1, L2):
-    s = x - (L1 - np.sum(x))/len(x)
-    Z = []
+    
+    #if there isn't any assigned norm, use the norm of the vector    
+    if(L2 == None):
+        L2 = np.linalg.norm(x)
+    
+    N = len(x)
+    
+    v = x - (L1 - np.sum(x))/N
+    zerocoeffs = np.array([])
 
     while(True):
-       midpoint = np.zeros_like(x)
-       for i in range(0, len(x)):
-           if i not in Z:
-               midpoint[i] = L1/(len(x)- len(Z))
        
-       aux   = s - midpoint
-       aux1  = np.sum(aux^2)
-       aux2  = 2*np.dot(np.transpose(aux), s)
-       aux3  = sum(s^2) - L2
-       alpha = (-aux2+math.sqrt(aux2^2 - 4* aux1 * aux3))/2*aux1
-       s = alpha * aux + midpoint
+       midpoint = np.ones((N)) * L1/(N - len(zerocoeffs))
+       if(len(zerocoeffs) != 0):
+           midpoint[zerocoeffs] = 0
+      
+       aux1  = v - midpoint
+       aux2  = np.sum(aux1**2)
+       aux3  = 2*np.dot(aux1.T, v)
+       aux4  = sum(v**2) - L2
+       alpha = (-aux3 + math.sqrt(aux3**2 - 4* aux2 * aux4))/(2*aux2)
+       v = alpha * aux1 + v
        
        
-       if(np.min(s) > 0):
-           return s
+       if(np.min(v) >= 0):
+           return v
     
-       less_than_zero_indices = np.where(s < 0)
-       Z.append(less_than_zero_indices)
-       s[less_than_zero_indices] = 0
+       zerocoeffs = np.where(v < 0)
+       v[zerocoeffs] = 0
+       constant = (L1 - np.sum(v))/(N - len(zerocoeffs))
+       v = v + constant
+       v[zerocoeffs] = 0
        
-       constant = (np.sum(s) - L1)( len(x) - len(Z))
-       mask = np.ones(len(s), np.bool)
-       mask[Z] = 0
-       s[mask] = s[mask] - constant
-       
-    
     
     
     
