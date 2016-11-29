@@ -8,13 +8,15 @@ import numpy as np
 import math
 import cmath 
 
-def non_negative_matrix_factorization(V, k):
+def non_negative_matrix_factorization(V, k, debug = False):
     """
      Function that, given a matrix V (d x n) of non-negative factors and a number
      k, decomposes the matrix V in k atoms and a matrix of coefficients. 
      
      Parameters: 
+     
      V: matrix (d x n) of non-negative factors
+     
      k: chosen number of atoms
      
      
@@ -56,13 +58,15 @@ def non_negative_matrix_factorization(V, k):
     return  W, H
     
     
-def non_negative_sparse_matrix_factorization(V, k, _lambda):
+def non_negative_sparse_matrix_factorization(V, k, _lambda, debug = False):
     """
      Function that, given a matrix V (d x n) of non-negative factors and a number
      k, decomposes the matrix V in k atoms with unit norm and a sparse matrix of coefficients. 
      
      Parameters: 
+     
      V: matrix (d x n) of non-negative factors
+     
      k: chosen number of atoms
      
      
@@ -102,21 +106,23 @@ def non_negative_sparse_matrix_factorization(V, k, _lambda):
         diff_W = np.sum((W - W_old)**2)
         diff_H = np.sum((H - H_old)**2)
         
-        print("Iteration:", iteration)
-        print("difference W:", diff_W)
-        print("difference_H:", diff_H)
+        if debug:
+            print("Iteration:", iteration)
+            print("difference W:", diff_W)
+            print("difference_H:", diff_H)
+        
         #check convergence
         if diff_W <  epsilon and diff_H < epsilon:
             print("W difference", diff_W)
             print("H difference", diff_H)
             break
     
-    return {"atoms": W, "coefficients":H}
+    return  W, H
     
     
     
     
-def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparseness):
+def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparseness, debug = False):
     if np.min(V) < 0:
         raise ValueError("The argument matrix is not positive")
     
@@ -163,9 +169,10 @@ def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparsene
             
             stepsize_H = stepsize_H/2
             if stepsize_H < 1e-200:
-                print("Error", reconstruction_error)
-                np.savetxt("atoms_matrix.csv", W, delimiter=",")
-                np.savetxt("coefficients_matrix.csv", H, delimiter=",")
+                if debug:
+                    print("Error", reconstruction_error)
+                    np.savetxt("atoms_matrix.csv", W, delimiter=",")
+                    np.savetxt("coefficients_matrix.csv", H, delimiter=",")
                 return W, H#algorithm has converged
         
         stepsize_H = stepsize_H*1.2 #increase slightly the stepsize
@@ -186,10 +193,11 @@ def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparsene
                 break
             
             stepsize_W = stepsize_W/2
-            if stepsize_W < 1e-200:                
-                print("Error", reconstruction_error)
-                np.savetxt("atoms_matrix.csv", W, delimiter=",")
-                np.savetxt("coefficients_matrix.csv", H, delimiter=",")
+            if stepsize_W < 1e-200:  
+                if debug:
+                    print("Error", reconstruction_error)
+                    np.savetxt("atoms_matrix.csv", W, delimiter=",")
+                    np.savetxt("coefficients_matrix.csv", H, delimiter=",")
                 return W, H #algorithm has converged
         
         stepsize_W = stepsize_W*1.2 #increase slightly the stepsize
