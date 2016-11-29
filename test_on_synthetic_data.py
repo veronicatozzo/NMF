@@ -11,6 +11,8 @@ import random
 import NMF
 
 
+pp.close("all")
+
 #generates true patterns with 96 features
 number_of_features = 96
 number_of_samples = 80
@@ -54,12 +56,13 @@ V = np.dot(atoms, coefficients)
 #add noise
 V_tilde = V + np.random.normal(0, 0.5, (number_of_features, number_of_samples))
 V_tilde[np.where(V_tilde < 0)] = 0 
-
+#rescale matrix to avoid overflow and underflow 
+    
 #run decomposition
 #res = NMF.non_negative_matrix_factorization(V_tilde, 10)
 _lambda = 0.1
-k = 11
-retrieved_atoms, retrieved_coefficients = NMF.nmf_sparsness_constraint_hoyer(V_tilde, k, atoms_sparseness=0.1, coefficients_sparseness=0.1)#, _lambda)
+k = 7
+retrieved_atoms, retrieved_coefficients = NMF.nmf_sparsness_constraint_hoyer(V_tilde, k, atoms_sparseness=0.1, coefficients_sparseness=0.5)#, _lambda)
 #check results
 
 for i in range(0, k):
@@ -72,6 +75,5 @@ for i in range(0, k):
 assert (np.min(retrieved_atoms) >= 0  and np.min(retrieved_coefficients) >= 0)
     
     
-V_tilde = np.dot(retrieved_atoms, retrieved_coefficients)
-error   = np.sum((V - V_tilde)**2)
+error   = 0.5 * np.sum((V_tilde - np.dot(retrieved_atoms, retrieved_coefficients))**2)
 print("Reconstruction error:", error)

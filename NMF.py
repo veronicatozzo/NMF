@@ -6,6 +6,7 @@ Created on Fri Nov 11 14:43:30 2016
 """
 import numpy as np
 import math
+import cmath 
 
 def non_negative_matrix_factorization(V, k):
     """
@@ -123,7 +124,7 @@ def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparsene
     n = np.shape(V)[1]
     
     #rescale matrix to avoid overflow and underflow 
-    V = V/np.max(V)
+    #V = V/np.max(V)
 
     #create and initialize two matrices with random numbers between 0 and 1
     W = np.random.random((d, k))
@@ -131,9 +132,9 @@ def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparsene
     
     #project matrices to have specific norm and sparseness
     L1_W = math.sqrt(d) - (math.sqrt(d) - 1)*atoms_sparseness
-    W = project_columns(W, L1_W, None)
+    W = project_columns(W, L1_W, 1)
     L1_H = math.sqrt(n) - (math.sqrt(n) - 1)*coefficients_sparseness        
-    H = project_rows(H, L1_H, 1)
+    H = project_rows(H, L1_H, None)
     
     #compute initial reconstruction error
     reconstruction_error = 0.5 * np.sum((V - np.dot(W, H))**2)
@@ -144,8 +145,8 @@ def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparsene
     iteration = 0
     while True:
         
-        W_old = W
-        H_old = H
+        #W_old = W
+        #H_old = H
         
         #update H, matrix of coefficients
         dH        = np.dot(W.T, np.dot(W, H)-V)
@@ -153,14 +154,18 @@ def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparsene
 
         while True:
             Hnew = H - stepsize_H * dH
-            Hnew = project_columns(H, L1_H, 1)
+            #Hnew = H * np.dot(W.T, V)/np.dot(np.dot(W.T,W),H)
+            Hnew = project_rows(H, L1_H, 1)
             
             new_error = 0.5 * np.sum((V - np.dot(W, Hnew))**2)
-            if new_error <= old_error:
+            if new_error < old_error:
                 break
             
             stepsize_H = stepsize_H/2
             if stepsize_H < 1e-200:
+                print("Error", reconstruction_error)
+                np.savetxt("atoms_matrix.csv", W, delimiter=",")
+                np.savetxt("coefficients_matrix.csv", H, delimiter=",")
                 return W, H#algorithm has converged
         
         stepsize_H = stepsize_H*1.2 #increase slightly the stepsize
@@ -173,14 +178,18 @@ def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparsene
 
         while True:
             Wnew = W - stepsize_W * dW
-            Wnew = project_rows(W, L1_W, None)
+            #Wnew = W = W * np.dot(V, H.T)/np.dot(np.dot(W, H), H.T)
+            Wnew = project_columns(W, L1_W, None)
             
             new_error = 0.5 * np.sum((V - np.dot(Wnew, H))**2)
-            if new_error <= old_error:
+            if new_error < old_error:
                 break
             
             stepsize_W = stepsize_W/2
-            if stepsize_W < 1e-200:
+            if stepsize_W < 1e-200:                
+                print("Error", reconstruction_error)
+                np.savetxt("atoms_matrix.csv", W, delimiter=",")
+                np.savetxt("coefficients_matrix.csv", H, delimiter=",")
                 return W, H #algorithm has converged
         
         stepsize_W = stepsize_W*1.2 #increase slightly the stepsize
@@ -200,7 +209,7 @@ def project_columns(matrix, sparseness, norm):
     new_matrix = np.zeros_like(matrix)    
     
     for i in range(0, matrix.shape[1]):
-        new_matrix[:,i] = project_vector(matrix[:,i], sparseness, None)
+        new_matrix[:,i] = project_vector(matrix[:,i], sparseness, norm)
     
     return new_matrix
     
@@ -225,33 +234,35 @@ def project_vector(x, L1, L2):
     
     N = len(x)
     
-    v = x - (L1 - np.sum(x))/N
+    v = x + (L1 - np.sum(x))/N
     zerocoeffs = np.array([])
-
-    while(True):
-       
+    
+    print("Projecting vector..")
+    #for i in range(1, 10000):
+    while(True):  
        midpoint = np.ones((N)) * L1/(N - len(zerocoeffs))
        if(len(zerocoeffs) != 0):
            midpoint[zerocoeffs] = 0
-      
-       aux1  = v - midpoint
-       aux2  = np.sum(aux1**2)
-       aux3  = 2*np.dot(aux1.T, v)
-       aux4  = sum(v**2) - L2
-       alpha = (-aux3 + math.sqrt(aux3**2 - 4* aux2 * aux4))/(2*aux2)
-       v = alpha * aux1 + v
+
+       aux  = v - midpoint   
+       a = np.sum(aux**2)
+       b = 2* np.dot(aux.T, v)
+       c = np.sum(v**2) - L2
+       alpha = (-b + cmath.sqrt(complex(b**2 - 4*a*c,0)).real)/(2*a)
+       v = alpha * aux + v
        
        
        if(np.min(v) >= 0):
+           print("Vector projected!")
            return v
     
-       zerocoeffs = np.where(v < 0)
+       zerocoeffs = np.asarray(np.where(v < 0))
        v[zerocoeffs] = 0
        constant = (L1 - np.sum(v))/(N - len(zerocoeffs))
        v = v + constant
        v[zerocoeffs] = 0
        
-    
+    #return abs(v)
     
     
     
