@@ -32,10 +32,10 @@ def get_synthetic_data(gaussian_noise = 1):
     sums = np.sum(atoms, axis = 0)
     atoms = atoms/sums
     
-    #for i in range(0, 7):
-    # pp.figure()
-    # pp.plot(atoms[:, i])
-    # pp.show()
+#    for i in range(0, 7):
+#     pp.figure()
+#     pp.plot(atoms[:, i])
+#     pp.show()
      
      
     

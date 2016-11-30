@@ -23,7 +23,7 @@ NMF_sparseness_constraint = 2
 sparseness_coefficients = 0.1
 sparseness_atoms = 0
 
-number_of_atoms = np.array(range(10,10))#right number of coefficients
+number_of_atoms = np.array(range(1,30))#right number of coefficients
 sigma = 0.5
 
 reconstruction_errors = np.zeros((len(number_of_atoms),3))
@@ -31,10 +31,10 @@ for i in range(0, len(number_of_atoms)):
     print("number of atoms", number_of_atoms[i])
     V = data.get_breast_cancer_data()
     W_1, H_1 = NMF.non_negative_matrix_factorization(V, number_of_atoms[i])
-    reconstruction_errors[i, simple_NMF] = 0.5 * np.sum((V - np.dot(W_1, H_1))**2)
+    reconstruction_errors[i, simple_NMF] = 0.5 * np.sum((V - np.dot(W_1, H_1))**2)/np.sum(V**2)
     print("Finished simple NMF")
     W_2, H_2 = NMF.non_negative_sparse_matrix_factorization(V, number_of_atoms[i], sparseness_coefficients)
-    reconstruction_errors[i, sparse_NMF] =  0.5 * np.sum((V - np.dot(W_2, H_2))**2)
+    reconstruction_errors[i, sparse_NMF] =  0.5 * np.sum((V - np.dot(W_2, H_2))**2)/np.sum(V**2)
     print("Finished sparse NMF")    
     #W, H = NMF.nmf_sparsness_constraint_hoyer(V, k, sparseness_atoms, sparseness_coefficients)
     #reconstruction_errors[i, NMF_sparseness_constraint] =  0.5 * np.sum((V - np.dot(W, H))**2)

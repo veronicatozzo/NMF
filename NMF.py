@@ -138,9 +138,9 @@ def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparsene
     
     #project matrices to have specific norm and sparseness
     L1_W = math.sqrt(d) - (math.sqrt(d) - 1)*atoms_sparseness
-    W = project_columns(W, L1_W, 1)
+    #W = project_columns(W, L1_W, 1)
     L1_H = math.sqrt(n) - (math.sqrt(n) - 1)*coefficients_sparseness        
-    H = project_rows(H, L1_H, None)
+    #H = project_rows(H, L1_H, None)
     
     #compute initial reconstruction error
     reconstruction_error = 0.5 * np.sum((V - np.dot(W, H))**2)
@@ -161,7 +161,7 @@ def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparsene
         while True:
             Hnew = H - stepsize_H * dH
             #Hnew = H * np.dot(W.T, V)/np.dot(np.dot(W.T,W),H)
-            Hnew = project_rows(H, L1_H, 1)
+            #Hnew = project_rows(H, L1_H, 1)
             
             new_error = 0.5 * np.sum((V - np.dot(W, Hnew))**2)
             if new_error < old_error:
@@ -186,7 +186,7 @@ def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparsene
         while True:
             Wnew = W - stepsize_W * dW
             #Wnew = W = W * np.dot(V, H.T)/np.dot(np.dot(W, H), H.T)
-            Wnew = project_columns(W, L1_W, None)
+            #Wnew = project_columns(W, L1_W, None)
             
             new_error = 0.5 * np.sum((V - np.dot(Wnew, H))**2)
             if new_error < old_error:
@@ -245,7 +245,7 @@ def project_vector(x, L1, L2):
     v = x + (L1 - np.sum(x))/N
     zerocoeffs = np.array([])
     
-    print("Projecting vector..")
+    #print("Projecting vector..")
     #for i in range(1, 10000):
     while(True):  
        midpoint = np.ones((N)) * L1/(N - len(zerocoeffs))
@@ -261,7 +261,7 @@ def project_vector(x, L1, L2):
        
        
        if(np.min(v) >= 0):
-           print("Vector projected!")
+     #      print("Vector projected!")
            return v
     
        zerocoeffs = np.asarray(np.where(v < 0))
