@@ -9,6 +9,7 @@ Created on Tue Nov 29 12:41:21 2016
 import numpy as np
 from scipy import signal
 import random
+from scipy.io import loadmat
 
 
 
@@ -57,3 +58,12 @@ def get_synthetic_data(gaussian_noise = 1):
     V_tilde[np.where(V_tilde < 0)] = 0 
     
     return V_tilde
+    
+    
+def get_breast_cancer_data():
+    filename = "/home/veronica/Desktop/Progetto Uli/alexandrov data/input/21_WTSI_BRCA_whole_genome_substitutions.mat"
+    data = loadmat(filename,  appendmat=False)
+    V = data["originalGenomes"]
+    return V
+    
+    
