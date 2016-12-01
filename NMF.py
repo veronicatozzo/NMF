@@ -125,7 +125,14 @@ def non_negative_sparse_matrix_factorization(V, k, _lambda, debug = False):
 def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparseness, debug = False):
     if np.min(V) < 0:
         raise ValueError("The argument matrix is not positive")
+
+    if atoms_sparseness < 0 or atoms_sparseness >= 1:
+        raise ValueError("The sparseness constant for the atoms must be in the interval (0,1)")
     
+    
+    if coefficients_sparseness < 0 or coefficients_sparseness >= 1:
+        raise ValueError("The sparseness constant for the coefficients must be in the interval (0,1)")
+        
     d = np.shape(V)[0]
     n = np.shape(V)[1]
     
@@ -138,9 +145,9 @@ def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparsene
     
     #project matrices to have specific norm and sparseness
     L1_W = math.sqrt(d) - (math.sqrt(d) - 1)*atoms_sparseness
-    #W = project_columns(W, L1_W, 1)
+    W = project_columns(W, L1_W, 1)
     L1_H = math.sqrt(n) - (math.sqrt(n) - 1)*coefficients_sparseness        
-    #H = project_rows(H, L1_H, None)
+    H = project_rows(H, L1_H, 1)
     
     #compute initial reconstruction error
     reconstruction_error = 0.5 * np.sum((V - np.dot(W, H))**2)
@@ -155,13 +162,13 @@ def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparsene
         #H_old = H
         
         #update H, matrix of coefficients
-        dH        = np.dot(W.T, np.dot(W, H)-V)
+        dH        = np.dot(W.T, (np.dot(W, H)-V))
         old_error = reconstruction_error        
 
         while True:
             Hnew = H - stepsize_H * dH
             #Hnew = H * np.dot(W.T, V)/np.dot(np.dot(W.T,W),H)
-            #Hnew = project_rows(H, L1_H, 1)
+            Hnew = project_rows(H, L1_H, None)
             
             new_error = 0.5 * np.sum((V - np.dot(W, Hnew))**2)
             if new_error < old_error:
@@ -180,13 +187,13 @@ def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparsene
         
         
         #update W, matrix of coefficients
-        dW        = np.dot(np.dot(W, H) -  V, H.T)
+        dW        = np.dot((np.dot(W, H) -  V), H.T)
         old_error = reconstruction_error        
 
         while True:
             Wnew = W - stepsize_W * dW
-            #Wnew = W = W * np.dot(V, H.T)/np.dot(np.dot(W, H), H.T)
-            #Wnew = project_columns(W, L1_W, None)
+            W#new = W = W * np.dot(V, H.T)/np.dot(np.dot(W, H), H.T)
+            Wnew = project_columns(W, L1_W, 1)
             
             new_error = 0.5 * np.sum((V - np.dot(Wnew, H))**2)
             if new_error < old_error:
@@ -238,14 +245,16 @@ def project_vector(x, L1, L2):
     
     #if there isn't any assigned norm, use the norm of the vector    
     if(L2 == None):
-        L2 = np.linalg.norm(x)
+        L2 = np.sum(x**2)
+        
+    #print("L2 norm", L2)
     
     N = len(x)
     
     v = x + (L1 - np.sum(x))/N
     zerocoeffs = np.array([])
     
-    #print("Projecting vector..")
+    print("Projecting vector..")
     #for i in range(1, 10000):
     while(True):  
        midpoint = np.ones((N)) * L1/(N - len(zerocoeffs))
@@ -258,17 +267,28 @@ def project_vector(x, L1, L2):
        c = np.sum(v**2) - L2
        alpha = (-b + cmath.sqrt(complex(b**2 - 4*a*c,0)).real)/(2*a)
        v = alpha * aux + v
+
+#       a = np.sum((v-midpoint)**2)
+#       b = 2* np.dot(midpoint,v-midpoint)
+#       c = np.sum(v**2) - L2
+#       alpha = (-b + cmath.sqrt(complex(b**2 - 4*a*c,0)).real)/(2*a)
+#       v = v + alpha * (v - midpoint)
        
        
        if(np.min(v) >= 0):
-     #      print("Vector projected!")
+           print("Vector projected!")
+           #print("final L2 norm", np.sum(v**2))
            return v
     
-       zerocoeffs = np.asarray(np.where(v < 0))
-       v[zerocoeffs] = 0
+       zerocoeffs = np.unique(np.append(zerocoeffs, np.asarray(np.where(v < 0)))).astype(int)
+       #print(len(zerocoeffs))
+       if(len(zerocoeffs) != 0):
+           v[zerocoeffs] = 0
+       
        constant = (L1 - np.sum(v))/(N - len(zerocoeffs))
        v = v + constant
-       v[zerocoeffs] = 0
+       if(len(zerocoeffs) != 0):
+           v[zerocoeffs] = 0
        
     #return abs(v)
     

@@ -10,23 +10,25 @@ import math
 import NMF
 
 dims = np.array([2,3,5,10,50,100,500,1000,5000,10000])
+#dims = np.array([96, 80])
+
 _ds   = np.array([0.1, 0.3, 0.5, 0.7, 0.9])
 _is   = np.array([0.1, 0.3, 0.5, 0.7, 0.9])
 
 ntests = 50
 
-for dsiter in range(1, len(_ds)):
-    for isiter in range(1, len(_is)):
+for dsiter in range(0, len(_ds)):
+    for isiter in range(0, len(_is)):
         desidered_sparseness = _ds[dsiter]
         initial_sparseness   = _is[isiter]
         print("Desidered sparseness: ", desidered_sparseness)
         print("Initial sparseness: ", initial_sparseness)
         
-        for dimiter in range(1, len(dims)):
+        for dimiter in range(0, len(dims)):
             N = dims[dimiter]
             print("Dimension: ", N)
             
-            for testcase in range(1, ntests):
+            for testcase in range(0, ntests):
                 sqrt_N = math.sqrt(N) 
                 L1_d = sqrt_N - (sqrt_N -1)*desidered_sparseness
                 L1_i = sqrt_N - (sqrt_N -1)*initial_sparseness
@@ -41,7 +43,9 @@ for dsiter in range(1, len(_ds)):
                 
                 v = NMF.project_vector(s, L1_d, 1)
                 
-                if( (abs(np.sum(abs(v))) - L1_d) > 1e-08 or (abs(sum(v**2))-1) > 1e-08):
+               # print("Norm L1", np.sum(abs(v)))
+               # print("Norm L2", np.sum(v**2))
+                if( (abs(np.sum(abs(v))) - L1_d) > 1e-08 or (abs(np.sum(v**2))-1) > 1e-08):
                     raise Exception("Error, the norms do not correspond")
                     
                 if(np.min(v) < 0):

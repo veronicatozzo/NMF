@@ -10,10 +10,13 @@ import numpy as np
 import NMF
 import matplotlib.pyplot as pp
 
-sigma = 0.5
+
+pp.close("all")
+
+sigma = 0.0000001
 k = 7
 V = data.get_synthetic_data(gaussian_noise = sigma)
-sparseness_coefficients = 0.5
+sparseness_coefficients = 0.3
 sparseness_atoms = 0
 
 W, H = NMF.nmf_sparsness_constraint_hoyer(V, k, sparseness_atoms, sparseness_coefficients)
