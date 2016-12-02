@@ -42,7 +42,7 @@ for i in range(0, len(number_of_atoms)):
 print("Obtained all data")
 fig = pp.figure()
 pp.plot(number_of_atoms, reconstruction_errors[:, simple_NMF], label = "NMF Lee and Seung 2001")
-pp.plot(number_of_atoms, reconstruction_errors[:, sparse_NMF], label = "NMF Hoyer 2002")
+#pp.plot(number_of_atoms, reconstruction_errors[:, sparse_NMF], label = "NMF Hoyer 2002")
 fig.suptitle('Reconstruction error in function of different number of atoms - breast cancer data', fontsize=18)
 pp.xlabel('Number of atoms', fontsize=16)
 pp.ylabel('Reconstruction error - Frobenious norm', fontsize=16)

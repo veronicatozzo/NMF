@@ -16,8 +16,8 @@ pp.close("all")
 sigma = 0.0000001
 k = 7
 V = data.get_synthetic_data(gaussian_noise = sigma)
-sparseness_coefficients = 0.3
-sparseness_atoms = 0
+sparseness_coefficients = 0.7
+sparseness_atoms = 0.4
 
 W, H = NMF.nmf_sparsness_constraint_hoyer(V, k, sparseness_atoms, sparseness_coefficients)
 reconstruction_error =  0.5 * np.sum((V - np.dot(W, H))**2)/np.sum(V**2)
