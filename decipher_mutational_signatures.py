@@ -7,6 +7,8 @@ Created on Thu Nov 24 11:27:23 2016
 
 import bootstrap
 import NMF
+import numpy as np
+import clustering_and_compactness
 
 
 def decipher_mutational_signatures(mutational_catalogue, N):
@@ -19,27 +21,31 @@ def decipher_mutational_signatures(mutational_catalogue, N):
     
     D = np.random.random(rows, N)
     C = np.random.random(N, cols)
+    all_D = []
+    all_C = []
     
+    mean_D = D
     #until convergence
-    while(difference > epsilon)
-        old_D = D
+    while(difference > epsilon):
+        old_mean_D = mean_D
         
         #random bootstrap with replacement
         sampled_catalogue = bootstrap.boostrap(mutational_catalogue)   
         
     
         #do NMF on sampled genomes
-        res = NMF.non_negative_matrix_factorization(sampled_catalogue, N)
-        atoms = res["atoms"]
-        coefficients = res["coefficients"]
-    
-        #cluster this and previous solutions to obtain averaging matrix, silouhette and reconstruction error
-    
+        D, C = NMF.non_negative_matrix_factorization(sampled_catalogue, N)
+        all_D.append(D)
+        all_C.append(C)
         
-        np.linalg.norm(W - W_old, ord = 'fro')
+        #cluster this and previous solutions to obtain averaging matrix, silouhette and reconstruction error
+        all_D, all_C, mean_D, silhouettes = clustering_and_compactness.compute_clusters_and_silhouettes(all_D, all_C)
+        
+        difference = np.sum((old_mean_D - mean_D)**2)
     
+    coefficients = all_C#compute_coefficients_with_sparsity()
     #return averaged D and C with silouhette and reconstruction error
-    
+    return mean_D, coefficients
     
     
     
