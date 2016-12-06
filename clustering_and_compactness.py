@@ -6,7 +6,7 @@ Created on Thu Nov 24 15:28:21 2016
 """
 
 import numpy as np
-
+import math
 
 def compute_clusters_and_silhouettes(all_dictionaries, all_coefficients):
     """
@@ -14,11 +14,16 @@ def compute_clusters_and_silhouettes(all_dictionaries, all_coefficients):
     in the function clustering(all_dictionaries, all_coefficients) it returns the ordered dictionaries 
     and coefficients, the computed dictionary centroids of the clusters and the relative silhouettes
     """
-    
     all_dictionaries, all_coefficients, centroids, clusters = clustering(all_dictionaries, all_coefficients)    
     silhouettes = silhouette(clusters)
     
-    return all_dictionaries, all_coefficients, centroids, silhouettes
+    sums = np.zeros_like(all_coefficients[0])
+    for i in range(0, len(all_coefficients)):
+        sums = sums + all_coefficients[i]
+    mean_coeffs = sums/len(all_coefficients)
+    
+    
+    return all_dictionaries, all_coefficients, centroids, mean_coeffs, np.mean(silhouettes)
 
 
 
@@ -35,7 +40,6 @@ def clustering(all_dictionaries, all_coefficients):
     It returns the list of all_dictionaries and all_coefficients with the last one ordered
     w.r.t. the previous clusters and the new centroids (of the dictionaries).
     """
-    
     #take the last element (not clustered yet)
     iterations = len(all_dictionaries)
     last   = iterations - 1
@@ -44,7 +48,7 @@ def clustering(all_dictionaries, all_coefficients):
     
     if(iterations == 1):
         #we only have one dictionary and the centroids are the atoms themeselves
-        return all_dictionaries, all_coefficients, D_last
+        return all_dictionaries, all_coefficients, D_last, D_last
     
     
     #take dimensions
@@ -62,27 +66,25 @@ def clustering(all_dictionaries, all_coefficients):
         clusters.append(cluster)
     
     centroids = sums/last
-    
     #find the nearest element in D_last to each centroids
     #do not consider cases where an atoms it's the most similar to two or more centroids
     ordered_D  = np.zeros(number_of_atoms)
     used_atoms = []
-    for c in range(0, number_of_atoms):
+    for c in range(0,number_of_atoms):
         distances    = compute_distances(centroids[:,c], D_last, used_atoms)
-        indices      = np.argsort(distances)
-        ordered_D[c] = indices[0]
-        centroids[c] = (sums[:,c] + D_last[:, indices[0]])/iterations
-        clusters[c].append(D_last[:, indices[0]])
-        used_atoms.append(indices[0])
-        
+        index      = np.argmax(distances)
+        ordered_D[c] = index
+        centroids[:,c] = (sums[:,c] + D_last[:, index])/iterations
+        clusters[c].append(D_last[:, index])
+        used_atoms.append(index)
         
         
     #order D_last and H_last w.r.t. ordered_D
     new_D = np.zeros_like(D_last)
     new_C = np.zeros_like(C_last)
     for i in range(0, number_of_atoms):
-        new_D[:,i] = D_last[:,indices[i]]
-        new_C[i,:] = C_last[indices[i], :]
+        new_D[:,i] = D_last[:,ordered_D[i]]
+        new_C[i,:] = C_last[ordered_D[i], :]
     
     all_dictionaries[last] = new_D
     all_coefficients[last] = new_C
@@ -115,15 +117,15 @@ def silhouette(clusters):
                 #save the average distance from the point to all the point in cluster k
                 d_i[k] = average_distance(current_cluster[i], clusters[k])
             #sort the distances to take the mean
-            indices = np.argsort(d_i)
+            indices = np.argsort(d_i)[::-1]
             #if the mean correspond to the current cluster take the second one
             if(indices[0] == c):
-                minimum = d_i[indices[1]]
+                maximum = d_i[indices[1]]
             else:
                 #otherwise take the first
-                minimum = d_i[indices[0]]
+                maximum = d_i[indices[0]]
             #compute the silhouette as formula by taking the minimum and the average distance of the current cluster
-            s_c[i]  = (minimum - d_i[c])/max(minimum, d_i[c])     
+            s_c[i]  = (maximum - d_i[c])/min(maximum, d_i[c])     
         #compute silhouette of cluster c as the mean of all the silhouette for the point in cluster c    
         silhouettes[c] = np.sum(s_c)/len(current_cluster)
     return silhouettes
@@ -143,9 +145,12 @@ def compute_distances(centroid, D, used):
     distances = np.zeros(D.shape[1])
     for atom in range(0, D.shape[1]):
         if(atom in used):
-            distances[atom] = float("inf")
+            distances[atom] = -float("inf")
         else:            
-            distances[atom ] = np.sum((centroid -  D[:,atom])**2)
+            centroid = centroid / np.max(centroid)
+            vector   = D[:,atom]/ np.max(D[:,atom])
+            distances[atom] = (np.dot(centroid, vector.T))/(math.sqrt(np.sum(centroid**2))*math.sqrt(np.sum(vector**2)))
+            #distances[atom ] = np.sum((centroid -  vector)**2)
     return distances
         
 
@@ -154,7 +159,7 @@ def average_distance(point, cluster):
     sum_of_distances = 0
     
     for new_point in cluster:
-        sum_of_distances = sum_of_distances + np.sum((point - new_point)**2)
+        sum_of_distances = sum_of_distances + (np.dot(point, new_point))/(math.sqrt(np.sum(point**2))*math.sqrt(np.sum(new_point**2)))
     
     return sum_of_distances/len(cluster)    
             

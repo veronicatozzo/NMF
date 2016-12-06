@@ -51,8 +51,8 @@ def non_negative_matrix_factorization(V, k, debug = False):
         #print("Iteration:", iteration)
         #check convergence
         if diff_W <  epsilon and diff_H < epsilon:
-            print("W difference", diff_W)
-            print("H difference", diff_H)
+            #print("W difference", diff_W)
+            #print("H difference", diff_H)
             break
     
     return  W, H
