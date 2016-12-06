@@ -146,9 +146,10 @@ def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparsene
     #project matrices to have specific norm and sparseness
     L1_W = math.sqrt(d) - (math.sqrt(d) - 1)*atoms_sparseness
     W = project_columns(W, L1_W, 1)
+    print("finished atoms")
     L1_H = math.sqrt(n) - (math.sqrt(n) - 1)*coefficients_sparseness        
-    H = project_rows(H, L1_H, 1)
-    
+    H = project_columns(H, L1_H, None)
+    print("finished coeffcients")
     #compute initial reconstruction error
     reconstruction_error = 0.5 * np.sum((V - np.dot(W, H))**2)
     
@@ -168,7 +169,7 @@ def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparsene
         while True:
             Hnew = H - stepsize_H * dH
             #Hnew = H * np.dot(W.T, V)/np.dot(np.dot(W.T,W),H)
-            Hnew = project_rows(H, L1_H, None)
+            Hnew = project_columns(H, L1_H, None)
             
             new_error = 0.5 * np.sum((V - np.dot(W, Hnew))**2)
             if new_error < old_error:
@@ -184,6 +185,7 @@ def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparsene
         
         stepsize_H = stepsize_H*1.2 #increase slightly the stepsize
         H = Hnew
+        print("finished H")
         
         
         #update W, matrix of coefficients
@@ -192,7 +194,7 @@ def nmf_sparsness_constraint_hoyer(V, k, atoms_sparseness, coefficients_sparsene
 
         while True:
             Wnew = W - stepsize_W * dW
-            W#new = W = W * np.dot(V, H.T)/np.dot(np.dot(W, H), H.T)
+            #Wnew = W = W * np.dot(V, H.T)/np.dot(np.dot(W, H), H.T)
             Wnew = project_columns(W, L1_W, 1)
             
             new_error = 0.5 * np.sum((V - np.dot(Wnew, H))**2)
@@ -254,8 +256,8 @@ def project_vector(x, L1, L2):
     v = x + (L1 - np.sum(x))/N
     zerocoeffs = np.array([])
     
-    print("Projecting vector..")
     #for i in range(1, 10000):
+   # print("doing it..")
     while(True):  
        midpoint = np.ones((N)) * L1/(N - len(zerocoeffs))
        if(len(zerocoeffs) != 0):
@@ -276,8 +278,8 @@ def project_vector(x, L1, L2):
        
        
        if(np.min(v) >= 0):
-           print("Vector projected!")
            #print("final L2 norm", np.sum(v**2))
+    #       print("Done")
            return v
     
        zerocoeffs = np.unique(np.append(zerocoeffs, np.asarray(np.where(v < 0)))).astype(int)

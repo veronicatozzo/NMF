@@ -29,19 +29,25 @@ mutational_catalogue = data.get_synthetic_data(gaussian_noise = 0.5)
 #number_of_signatures_to_try = 20
 #for number_of_signatures in range(2, number_of_signatures_to_try):
 
-N = 7 #da 1 a min(K, G) -1
-    
+
+minimum = 4
+maximum = 15  
 #decipher mutational signatures
-D, C, stability = model_selection.find_model(mutational_catalogue, min_N = 4, max_N = 7)
+Ds, Cs, stability, reconstruction_errors = model_selection.find_model(mutational_catalogue, min_N = minimum, max_N = maximum)
 
     
 fig = pp.figure()
-pp.plot(possible_Ns, stabilities, label = "Model stability")      
-pp.plot(possible_Ns, reconstruction_errors, label = "Reconstruction error")
+x_axis = np.arange(minimum, maximum + 1)
+pp.scatter(x_axis, stability)
+pp.plot(x_axis, stability, label = "Model stability")      
+pp.scatter(x_axis, reconstruction_errors)
+pp.plot(x_axis, reconstruction_errors, label = "Reconstruction error")
 fig.suptitle('Model selection', fontsize=18)
+plt.xticks(np.arange(minimum, maximum + 1, 1.0))
+aux = np.concatenate((stability, reconstruction_errors))
+pp.axis([minimum - 0.2, maximum + 0.2, min(aux) - 0.5, max(aux) + 0.5])
 pp.xlabel('Number of searched atoms', fontsize=16)
-pp.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
-              ncol=2, mode="expand", borderaxespad=0.)
+pp.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
 pp.show() 
 
 #for i in range(0, N):
