@@ -24,3 +24,36 @@ def remove_weak_mutatios(mutational_catalogue, percentage):
 
     return {"mutational_catalogue": new_mutational_catalogue, "removed_rows": rows_to_remove}
     
+
+
+def add_removed_rows(dictionary, removed_rows):
+    rows_dictionary = dictionary.shape[0]
+    rows = rows_dictionary + len(removed_rows)
+    cols = dictionary.shape[1]
+    
+    D = np.zeros((rows, cols))
+    
+    count = 0    
+    for i in range(0, rows_dictionary):
+        if(count < len(removed_rows) and i==removed_rows[count]):
+            count = count+1
+        D[i+count,:] = dictionary[i,:]
+    return D
+    
+    
+def ordering_for_types(D, types):
+    possible_types = ["C>A", "C>G", "C>T", "T>A", "T>C", "T>G"]
+    mutations = dict.fromkeys(possible_types)
+    
+    for mut in mutations:
+        mutations[mut] = np.where(types == mut)
+        
+
+    new_D = np.zeros_like(D)
+    
+    count = 0
+    for mut in mutations:
+        new_D[count:count+len(mutations[mut][0]), :] =  D[mutations[mut][0],:]
+        count = count + len(mutations[mut][0])
+        
+    return new_D

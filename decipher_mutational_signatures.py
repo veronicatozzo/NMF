@@ -11,10 +11,10 @@ import numpy as np
 import clustering_and_compactness
 import matplotlib.pyplot as pp
 
-def decipher_mutational_signatures(mutational_catalogue, N, plot_probabilities = False):
+def decipher_mutational_signatures(mutational_catalogue, N, plot_probabilities = False, sparse = False, _lambda = 0.1):
     
     
-    epsilon = 0.001
+    epsilon = 0.01
     difference = 10
     rows = np.shape(mutational_catalogue)[0]
     cols = np.shape(mutational_catalogue)[1]
@@ -30,7 +30,7 @@ def decipher_mutational_signatures(mutational_catalogue, N, plot_probabilities =
     mean_D = D
     #until convergence
     while(difference > epsilon):
-   # for i in range(0,2):
+    #for i in range(0,1):
         old_mean_D = mean_D
         
         #random bootstrap with replacement
@@ -38,7 +38,11 @@ def decipher_mutational_signatures(mutational_catalogue, N, plot_probabilities =
         sampling_probabilities.append(get_features_probability(sampled_catalogue))
     
         #do NMF on sampled genomes
-        D, C = NMF.non_negative_matrix_factorization(sampled_catalogue, N)
+        if(sparse):
+            D, C = NMF.non_negative_sparse_matrix_factorization(sampled_catalogue, N, _lambda = _lambda )
+        else:
+            D, C = NMF.non_negative_matrix_factorization(sampled_catalogue, N)
+            
         print("Factorization computed..")
         all_D.append(D)
         all_C.append(C)

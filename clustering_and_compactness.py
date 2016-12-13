@@ -15,6 +15,8 @@ def compute_clusters_and_silhouettes(all_dictionaries, all_coefficients):
     and coefficients, the computed dictionary centroids of the clusters and the relative silhouettes
     """
     all_dictionaries, all_coefficients, centroids, clusters = clustering(all_dictionaries, all_coefficients)    
+    #silhouettes = np.zeros(len(clusters))    
+    #if(len(all_dictionaries) != 1):    
     silhouettes = silhouette(clusters)
     
     sums = np.zeros_like(all_coefficients[0])
@@ -106,34 +108,31 @@ def silhouette(clusters):
     #for each cluster 
     for c in range(0, number_of_clusters):
         #take current cluster
-        current_cluster = clusters[c]
-        # take the silhouette for each point of current cluster
-        s_c = np.zeros(len(current_cluster))
-        #for each point of current cluster        
-        for i in range(0, len(current_cluster)):
-            #average distances with all the cluster
-            d_i = np.zeros(number_of_clusters)
-            for k in range(0, number_of_clusters):
-                #save the average distance from the point to all the point in cluster k
-                d_i[k] = average_distance(current_cluster[i], clusters[k])
-            #sort the distances to take the mean
-            indices = np.argsort(d_i)[::-1]
-            #if the mean correspond to the current cluster take the second one
-            if(indices[0] == c):
-                maximum = d_i[indices[1]]
-            else:
-                #otherwise take the first
-                maximum = d_i[indices[0]]
-            #compute the silhouette as formula by taking the minimum and the average distance of the current cluster
-            s_c[i]  = (maximum - d_i[c])/min(maximum, d_i[c])     
-        #compute silhouette of cluster c as the mean of all the silhouette for the point in cluster c    
-        silhouettes[c] = np.sum(s_c)/len(current_cluster)
+        A = clusters[c]
+        others = [x for i,x in enumerate(clusters) if i!=c]
+        silhouettes[c] = single_cluster_silhouette(A, others)
     return silhouettes
 
             
             
-            
-    
+ 
+def single_cluster_silhouette(A, others):
+    single_point_silhouette = np.zeros(len(A))
+    for i in range(0, len(A)):
+        a_i = average_distance(A[i], A)
+        d_i = np.zeros(len(others))        
+        for c in range(0, len(others)):
+            d_i[c] = average_distance(A[i], others[c])
+        b_i = np.max(d_i)
+        
+        if(a_i > b_i):
+            single_point_silhouette[i] = 1 - b_i/a_i
+        elif(a_i == b_i):
+            single_point_silhouette[i] = 0
+        else:
+            single_point_silhouette[i] = a_i/b_i - 1
+    return np.mean(single_point_silhouette)
+        
     
 def compute_distances(centroid, D, used):
     """

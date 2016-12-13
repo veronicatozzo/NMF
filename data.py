@@ -10,8 +10,7 @@ import numpy as np
 from scipy import signal
 import random
 from scipy.io import loadmat
-
-
+import unicodedata
 
 def get_synthetic_data(gaussian_noise = 1):
     number_of_features = 96
@@ -64,6 +63,11 @@ def get_breast_cancer_data():
     filename = "/home/veronica/Desktop/Progetto Uli/alexandrov data/input/21_WTSI_BRCA_whole_genome_substitutions.mat"
     data = loadmat(filename,  appendmat=False)
     V = data["originalGenomes"]
-    return V
+    types = data["types"]
+    l = len(types)
+    types_1 = [None]* l
+    for i in range(0,l):
+        types_1[i] = unicodedata.normalize('NFKD', types[i][0][0]).encode('ascii','ignore')
+    return V, np.asarray(types_1)
     
     
