@@ -52,7 +52,8 @@ def ordering_for_types(D, types):
     new_D = np.zeros_like(D)
     
     count = 0
-    for mut in mutations:
+    for mut in possible_types:
+        print(mut)
         new_D[count:count+len(mutations[mut][0]), :] =  D[mutations[mut][0],:]
         count = count + len(mutations[mut][0])
         
