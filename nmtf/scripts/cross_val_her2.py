@@ -1,6 +1,6 @@
 
 import sys
-sys.path.append("/Users/veronica/Desktop/git_repos/NMF/")
+sys.path.append("/cs/research/bioinf/bionet1/Veronica/NMF/")
 
 import pickle as pkl
 
