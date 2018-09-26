@@ -1,0 +1,5 @@
+setup.py
+nmtf.egg-info/PKG-INFO
+nmtf.egg-info/SOURCES.txt
+nmtf.egg-info/dependency_links.txt
+nmtf.egg-info/top_level.txt
