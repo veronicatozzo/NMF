@@ -6,7 +6,7 @@ import pickle as pkl
 
 from os import listdir
 from os.path import isfile, join
-
+     
 from nmtf.nmtf import SSNMTF_CV
 from nmtf.read import get_adjacency
 
