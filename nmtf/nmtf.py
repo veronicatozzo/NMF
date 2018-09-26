@@ -5,12 +5,11 @@ import types
 
 import numpy as np
 
-#removed for launching on server
-#from sklearn.base import BaseEstimator
-#from sklearn.utils import check_array, check_random_state
-#from sklearn.utils.extmath import squared_norm
+from sklearn.base import BaseEstimator
+from sklearn.utils import check_array, check_random_state
+from sklearn.utils.extmath import squared_norm
 
-from .utils import dispersion_coefficient, connectivity_matrix, squared_norm
+from .utils import dispersion_coefficient, connectivity_matrix
 
 def _init_svd(X_sum, k):
     """C. Boutsidis and E. Gallopoulos, SVD-based initialization: A head
@@ -53,7 +52,6 @@ def _get_pos_neg(X):
 def _minimize_SSNMTF(X, G, A, L_neg, L_pos, epsilon=1e-10, tol=1e-2, rel_tol=1e-8,
                      max_iter= 200, verbose=0, random_state = None,
                      compute_ktt=False, return_n_iter=False):
-    np.random.seed(random_state)
     X_norm = np.sum([squared_norm(x) for x in X])
     obj = np.inf
     GtG = G.T.dot(G) + epsilon
@@ -129,8 +127,7 @@ def _minimize_SSNMTF(X, G, A, L_neg, L_pos, epsilon=1e-10, tol=1e-2, rel_tol=1e-
     return return_list
 
 
-#class SSNMTF(BaseEstimator):
-class SSNMTF():
+class SSNMTF(BaseEstimator):
     """
     Function for solving Graph Regularized Symmetric Non-Negative Matrix Tri-Factorization
 
@@ -181,36 +178,33 @@ class SSNMTF():
             History of all the iterations.
         """
 
-        #X = [check_array(x, ensure_min_features=2,
-        #                 ensure_min_samples=2, estimator=self) for x in X]
+        X = [check_array(x, ensure_min_features=2,
+                         ensure_min_samples=2, estimator=self) for x in X]
         assert len(np.unique([x.shape for x in X])) == 1, \
                 "All the matrices in X should have the same order"
         if self.adjacencies is not None:
-        #    A = [check_array(x, ensure_min_features=2,
-        #                     ensure_min_samples=2, estimator=self)
-        #                     for x in self.adjacencies]
+            A = [check_array(x, ensure_min_features=2,
+                             ensure_min_samples=2, estimator=self)
+                             for x in self.adjacencies]
             assert len(np.unique([x.shape for x in A])) == 1, \
                     "All the matrices in adjacencies hould have the same order"
         else:
             A = []
 
-        #self.random_state = check_random_state(self.random_state)
-        np.random.seed(random_state)
+        self.random_state = check_random_state(self.random_state)
 
         # initialization
         if self.G_init is not None:
             G = G_init
         else:
             if self.init == 'random':
-                #G = self.random_state.rand(X[0].shape[0], self.k)
-                G = np.random.rand(X[0].shape[0], self.k)
+                G = self.random_state.rand(X[0].shape[0], self.k)
             elif str(self.init).upper() == 'SVD':
                 G = _init_svd(np.sum(X, 0), self.k)
             else:
                 warnings.warn("No initialization specified,"
                               "initializating randomly")
-                #G = self.random_state.rand(X[0].shape[0], self.k)
-                G = np.random.rand(X[0].shape[0], self.k)
+                G = self.random_state.rand(X[0].shape[0], self.k)
 
         # graph Regularization
         L_pos, L_neg = list(), list()

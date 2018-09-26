@@ -15,23 +15,3 @@ def connectivity_matrix(X):
     for r, i in enumerate(indices):
         C[r,i] = 1
     return C.dot(C.T)
-
-
-def squared_norm(x):
-    """Squared Euclidean or Frobenius norm of x.
-    Faster than norm(x) ** 2.
-    Parameters
-    ----------
-    x : array_like
-    Returns
-    -------
-    float
-        The Euclidean norm when x is a vector, the Frobenius norm when x
-        is a matrix (2-d array).
-    """
-    x = np.ravel(x, order='K')
-    if np.issubdtype(x.dtype, np.integer):
-        warnings.warn('Array type is integer, np.dot may overflow. '
-                      'Data should be float type to avoid this issue',
-                      UserWarning)
-    return np.dot(x, x)

@@ -1,12 +1,12 @@
 
 import sys
-sys.path.append("/Users/veronica/Desktop/git_repos/NMF/")
+sys.path.append("/cs/research/bioinf/bionet1/Coexpression_Study/BCStages-SubtypesNetworks/")
 
 import pickle as pkl
 
 from os import listdir
 from os.path import isfile, join
-     
+
 from nmtf.nmtf import SSNMTF_CV
 from nmtf.read import get_adjacency
 
