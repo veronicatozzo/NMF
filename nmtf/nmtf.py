@@ -19,16 +19,16 @@ def _init_svd(X_sum, k):
     indices = np.argsort(w)[::-1]
     sorted_eigs = w[indices]
     pos_w = np.abs(w)
-    trace = np.sum(pos_w)
-    tr_i = 0
-    k_new = 1
-    for i in range(len(w)):
-        tr_i += sorted_eigs[i]
-        if tr_i/trace > 0.9:
-            k_new = i
-            break
-
-    k_new = min(k, k_new)
+    #trace = np.sum(pos_w)
+    #tr_i = 0
+    #k_new = 1
+    #for i in range(len(w)):
+    #    tr_i += sorted_eigs[i]
+    #    if tr_i/trace > 0.9:
+    #        k_new = i
+    #        break
+    #
+    #k_new = min(k, k_new)
 
     G = []
     for i in range(k_new):
@@ -312,7 +312,7 @@ class SSNMTF_CV(BaseEstimator):
                 print("k: %d, dispersion_coefficient: %.4f" %(k, coeff))
 
         # refit
-        best_est = est = SSNMTF(best_k, self.adjacencies, self.gamma, self.max_iter,
+        best_est = SSNMTF(best_k, self.adjacencies, self.gamma, self.max_iter,
                      init='svd', epsilon=self.epsilon,
                      compute_ktt=self.compute_ktt, tol=self.tol,
                      rtol=self.rtol, verbose=max(self.verbose-1,0),
