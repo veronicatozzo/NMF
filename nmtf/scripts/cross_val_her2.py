@@ -1,12 +1,14 @@
-
 import sys
-sys.path.append("/cs/research/bioinf/bionet1/Veronica/NMF/")
+import os
+os.environ["MKL_NUM_THREADS"] = "8" 
+os.environ["NUMEXPR_NUM_THREADS"] = "8" 
+os.environ["OMP_NUM_THREADS"] = "8"
 
 import pickle as pkl
 
 from os import listdir
 from os.path import isfile, join
-     
+
 from nmtf.nmtf import SSNMTF_CV
 from nmtf.read import get_adjacency
 
