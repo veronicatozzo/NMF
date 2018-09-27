@@ -1,6 +1,5 @@
 
 import sys
-sys.path.append("/cs/research/bioinf/bionet1/Coexpression_Study/BCStages-SubtypesNetworks/")
 
 import pickle as pkl
 

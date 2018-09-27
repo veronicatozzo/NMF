@@ -1,0 +1,10 @@
+import numpy as np
+
+
+def integration_SSNMTF(G, S, mode='mean'):
+    if str(mode).lower() == 'mean':
+        integrated = np.mean(S, axis=0)
+    else:
+        raise ValueError("You specified a not availale mode")
+
+    return G.dot(integrated).dot(G.T)
