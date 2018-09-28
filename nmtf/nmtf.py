@@ -31,7 +31,7 @@ def _init_svd(X_sum, k):
     #k_new = min(k, k_new)
 
     G = []
-    for i in range(k_new):
+    for i in range(k):
         xx = v[:, i]*pos_w[i]
         xp = np.maximum(xx, 0)
         xn = xp - xx
