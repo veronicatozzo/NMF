@@ -9,7 +9,8 @@ from sklearn.base import BaseEstimator
 from sklearn.utils import check_array, check_random_state
 from sklearn.utils.extmath import squared_norm
 
-from .utils import dispersion_coefficient, connectivity_matrix
+from .utils import dispersion_coefficient_Kim, dispersion_coefficients_Dognig, \
+                    connectivity_matrix
 
 def _init_svd(X_sum, k):
     """C. Boutsidis and E. Gallopoulos, SVD-based initialization: A head
@@ -31,7 +32,7 @@ def _init_svd(X_sum, k):
     #k_new = min(k, k_new)
 
     G = []
-    for i in range(k_new):
+    for i in range(k):
         xx = v[:, i]*pos_w[i]
         xp = np.maximum(xx, 0)
         xn = xp - xx
@@ -237,6 +238,7 @@ class SSNMTF_CV(BaseEstimator):
     """
 
     def __init__(self, ks=10, adjacencies=None, gamma=0, max_iter=500,
+                 mode="kim",
                  epsilon=1e-10, compute_ktt=False, tol=1e-2, rtol=1e-8,
                  verbose=0, random_state=None, number_of_repetition=10):
         self.ks = ks
@@ -250,7 +252,7 @@ class SSNMTF_CV(BaseEstimator):
         self.rtol = rtol
         self.compute_ktt=compute_ktt
         self.number_of_repetition = number_of_repetition
-
+        self.mode = mode
 
     def fit(self, X, y=None):
         """
@@ -275,12 +277,19 @@ class SSNMTF_CV(BaseEstimator):
 
         # parameters to test
         if  isinstance(self.ks, int):
-            k_max = int(np.sqrt(X[0].shape[0]))
+            k_max = int(np.sqrt(X[0].shape[0]))*2
             ks = np.arange(2, max(k_max, 3), max(int((k_max-2)/10),1))
         else:
             ks = self.ks
         # cross Validation
-        best_coeff = 0
+        if self.mode == 'kim':
+            best_coeff = 0
+            best_k = -1
+        if self.mode == 'dognig':
+            best_eta = 0
+            best_eta_k = -1
+            best_v = 0
+            best_v_k = -1
         best_k = -1
         results = dict.fromkeys(ks)
         for k in ks:
@@ -301,16 +310,29 @@ class SSNMTF_CV(BaseEstimator):
                 estimators.append(est)
 
             consensus /= self.number_of_repetition
-            coeff = dispersion_coefficient(consensus)
-            if coeff > best_coeff:
-                best_coeff = coeff
-                best_k = k
+            if self.mode=='kim':
+                coeff = dispersion_coefficient_kim(consensus)
+                if coeff > best_coeff:
+                    best_coeff = coeff
+                    best_k = k
+                results[k] = [estimators, consensus, coeff]
+                if self.verbose:
+                    print("k: %d, dispersion_coefficient: %.4f" %(k, coeff))
+            if self.mode == 'dognig':
+                eta, v = dispersion_coefficients_Dognig(consensus, k)
+                if eta > best_eta:
+                    best_eta = eta
+                    best_eta_k = k
+                if v > best_v:
+                    best_v = v
+                    best_v_k = k
+                results[k] = [estimators, consensus, eta, v]
+                if self.verbose:
+                    print("k: %d, dispersion_coefficient: eta %.4f, v %.4f"
+                            %(k, eta, v))
 
-            results[k] = [estimators, consensus, coeff]
-
-            if self.verbose:
-                print("k: %d, dispersion_coefficient: %.4f" %(k, coeff))
-
+        if self.mode == 'dognig':
+            best_k = int((best_eta_k + best_v_k)/2)
         # refit
         best_est = SSNMTF(best_k, self.adjacencies, self.gamma, self.max_iter,
                      init='svd', epsilon=self.epsilon,
@@ -323,6 +345,8 @@ class SSNMTF_CV(BaseEstimator):
         self.S_ = best_est.S_
         self.k = best_k
         self.cv_results_ = results
-        self.dispersion_coefficient_ = best_coeff
-
+        if self.mode == 'kim':
+            self.dispersion_coefficient_ = best_coeff
+        else:
+            self.dispersion_coefficient_ = best_v
         return self
