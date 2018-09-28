@@ -2,6 +2,10 @@
 import sys
 
 import pickle as pkl
+import os
+os.environ["MKL_NUM_THREADS"] = "8"
+os.environ["NUMEXPR_NUM_THREADS"] = "8"
+os.environ["OMP_NUM_THREADS"] = "8"
 
 from os import listdir
 from os.path import isfile, join

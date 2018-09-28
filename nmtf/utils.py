@@ -1,5 +1,27 @@
 import numpy as np
+from itertools import combinations
 
+
+def erdos_renyi(n, m):
+    """
+    n: int,
+        Number of nodes
+    m: int,
+        Number of edges
+    """
+    network = np.zeros((n,n))
+    comb = list(combinations(np.arange(0, n), 2))
+
+    i = 0
+    while i < m:
+        v = int(np.random.uniform(low=0, high=len(comb)))
+        if network[comb[v]]:
+            continue
+        network[comb[v]] = 1
+        network[comb[v][::-1]] = 1
+        i +=1
+
+    return network
 
 def dispersion_coefficient_Kim(X):
     coeff = 0
