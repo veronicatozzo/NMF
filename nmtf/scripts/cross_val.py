@@ -14,9 +14,10 @@ from nmtf.nmtf import SSNMTF_CV
 from nmtf.read import get_adjacency
 
 parent_folder = "/cs/research/bioinf/bionet1/Coexpression_Study/BCStages-SubtypesNetworks/"
-folders = ["HER2Networks", "LuminalBNetworks", "Stage2Networks",
-           "Stage4Networks", "LuminalANetworks",  "Stage1Networks",
-           "Stage3Networks",  "TripleNegativeNetworks"]
+#folders = ["HER2Networks", "LuminalBNetworks", "Stage2Networks",
+#           "Stage4Networks", "LuminalANetworks",  "Stage1Networks",
+#           "Stage3Networks",  "TripleNegativeNetworks"]
+folders = ["Stage2Networks"]
 
 for i, fold in enumerate(folders):
     print("Analizing group "+fold+"...")
@@ -27,9 +28,9 @@ for i, fold in enumerate(folders):
     print("Getting adjacency matrices..")
     graphs = [get_adjacency(f) for f in files]
     print("Starting cross_validation")
-    est = SSNMTF_CV(mode='Dognig', verbose=1)
+    est = SSNMTF_CV(mode='dognig', verbose=1)
     est.fit(graphs)
 
-    with open("../../results/cross_val_res"+folder+".pkl", 'wb') as f:
+    with open("../../results/cross_val_res"+fold+".pkl", 'wb') as f:
         pkl.dump(est, f)
     print("Finished %d group"%i)

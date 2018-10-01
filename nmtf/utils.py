@@ -9,17 +9,15 @@ def erdos_renyi(n, m):
     m: int,
         Number of edges
     """
+    comb = np.array(list(combinations(np.arange(0, n), 2)))
+    np.random.shuffle(comb)
+    m = int(m)
+    selected_comb = comb[:m]
+    x = [c[0] for c in selected_comb]
+    y = [c[1] for c in selected_comb]
     network = np.zeros((n,n))
-    comb = list(combinations(np.arange(0, n), 2))
-
-    i = 0
-    while i < m:
-        v = int(np.random.uniform(low=0, high=len(comb)))
-        if network[comb[v]]:
-            continue
-        network[comb[v]] = 1
-        network[comb[v][::-1]] = 1
-        i +=1
+    network[x, y] = 1
+    network[y, x] = 1
 
     return network
 

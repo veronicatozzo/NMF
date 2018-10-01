@@ -277,7 +277,7 @@ class SSNMTF_CV(BaseEstimator):
 
         # parameters to test
         if  isinstance(self.ks, int):
-            k_max = int(np.sqrt(X[0].shape[0]))
+            k_max = int(np.sqrt(X[0].shape[0]))*2
             ks = np.arange(2, max(k_max, 3), max(int(round((k_max-2)/10)),1))
         else:
             ks = self.ks

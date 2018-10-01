@@ -1,6 +1,8 @@
 import numpy as np
 
 
+# normalizzando le S
+# facendo una media pesata 
 def integration_SSNMTF(G, S, mode='mean'):
     if str(mode).lower() == 'mean':
         integrated = np.mean(S, axis=0)
