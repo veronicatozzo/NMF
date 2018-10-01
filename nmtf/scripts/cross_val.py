@@ -27,9 +27,9 @@ for i, fold in enumerate(folders):
     print("Getting adjacency matrices..")
     graphs = [get_adjacency(f) for f in files]
     print("Starting cross_validation")
-    est = SSNMTF_CV(mode='Dognig', verbose=1)
+    est = SSNMTF_CV(mode='dognig', verbose=1)
     est.fit(graphs)
 
-    with open("../../results/cross_val_res"+folder+".pkl", 'wb') as f:
+    with open("../../results/cross_val_res"+fold+".pkl", 'wb') as f:
         pkl.dump(est, f)
     print("Finished %d group"%i)
