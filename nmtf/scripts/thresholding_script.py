@@ -21,10 +21,10 @@ def main(argv):
     print("... for a total of %d networks.." % len(files))
     print("Getting adjacency matrices..")
     graphs = [get_adjacency(f) for f in files]
-    est = SSNMTF(k=k, init='svd', verbose=1)
+    est = SSNMTF(k=int(k), init='svd', verbose=1)
     est.fit(graphs)
     print("fitted NMTF")
-    with open("../../"+str(f).split('/')[-1]+".pkl", 'wb') as f:
+    with open("../../results/"+str(f).split('/')[-2]+".pkl", 'wb') as f:
         pkl.dump(est, f)
 
     integrated = integration_SSNMTF(est.G_, est.S_, mode='mean')
@@ -32,7 +32,7 @@ def main(argv):
     res = thresholding_generating_graphs(integrated, min_v=0.01, max_v=0.99,
                     make_plot=False,
                       ax=None, label='', n_repetitions=10)
-    with open("../../"+str(f).split('/')[-1]+"_thresholding_results.pkl", 'wb' as f):
+    with open("../../results/"+str(f).split('/')[-2]+"_thresholding_results.pkl", 'wb') as f:
         pkl.dump(res, f)
 
 if __name__ == "__main__":
