@@ -13,11 +13,11 @@ from nmtf.thresholding import thresholding_generating_graphs
 
 def main(argv):
     k = argv[0]
-    f = argv[1]
+    fold = argv[1]
     outputfile = argv[2]
-
-    files = [join(complete_path, f) for f in listdir(complete_path)
-             if isfile(join(complete_path, f))]
+ 
+    files = [join(fold, f) for f in listdir(fold)
+             if isfile(join(fold, f))]
     print("... for a total of %d networks.." % len(files))
     print("Getting adjacency matrices..")
     graphs = [get_adjacency(f) for f in files]
