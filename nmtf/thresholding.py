@@ -45,7 +45,7 @@ def thresholding(X, mode='5', min_v=0.01, max_v=0.09, make_plot=False,
             to their decreasing order
         - 'cl_coeff' the threshold is selected comparing the
           clustering coefficient with the one of a random graph
-          "LEAL, Luis Guillermo; LÓPEZ, Camilo; LÓPEZ-KLEINE, Liliana.
+          "LEAL, Luis Guillermo; LOPEZ, Camilo; LOPEZ-KLEINE, Liliana.
            Construction and comparison of gene co-expression networks shows
            complex plant immune responses. PeerJ, 2014, 2: e610."
     """
