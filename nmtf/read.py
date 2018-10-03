@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from scipy.sparse import coo_matrix 
+from scipy.sparse import coo_matrix
 
 def get_adjacency(file):
     data = pd.read_table(file,  sep=' ')
@@ -11,4 +11,5 @@ def get_adjacency(file):
         data = data.replace(nodes[i][1], nodes[i][0])
     M = coo_matrix((data.iloc[:,2], (data.iloc[:,0],data.iloc[:,1])), shape=(len(nodes), len(nodes))).todense()
     M = (M + M.T)/2
+    M += np.eye(M.shape[0])
     return M

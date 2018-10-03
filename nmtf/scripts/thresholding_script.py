@@ -14,6 +14,8 @@ from nmtf.thresholding import thresholding_generating_graphs
 def main(argv):
     k = argv[0]
     fold = argv[1]
+    outputfile = argv[2]
+ 
     files = [join(fold, f) for f in listdir(fold)
              if isfile(join(fold, f))]
     print("... for a total of %d networks.." % len(files))

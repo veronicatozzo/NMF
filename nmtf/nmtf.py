@@ -292,6 +292,7 @@ class SSNMTF_CV(BaseEstimator):
             best_v_k = -1
         best_k = -1
         results = dict.fromkeys(ks)
+        self.input_ = X
         for k in ks:
             consensus = np.zeros_like(X[0])
             estimators = []
