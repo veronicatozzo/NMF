@@ -28,7 +28,7 @@ def main(argv):
         pkl.dump(est, f)
 
     integrated = integration_SSNMTF(est.G_, est.S_, mode='mean')
-    print(starting thresholding)
+    print("starting thresholding")
     res = thresholding_generating_graphs(integrated, min_v=0.01, max_v=0.99,
                     make_plot=False,
                       ax=None, label='', n_repetitions=10)

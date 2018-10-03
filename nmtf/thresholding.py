@@ -120,7 +120,7 @@ def thresholding(X, mode='5', min_v=0.01, max_v=0.09, make_plot=False,
             return result
 
 
-def thresholding_generating_graphs(X, min_v=0.01, max_v=0.09, make_plot=False,
+def thresholding_generating_graphs(X, min_v=0.01, max_v=0.99, make_plot=False,
                  ax=None, label='', n_repetitions=10):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -140,7 +140,7 @@ def thresholding_generating_graphs(X, min_v=0.01, max_v=0.09, make_plot=False,
 
             n = X.shape[0]
             m = np.sum(X_thr)/2
-            
+
             diffs = []
             for rep in range(n_repetitions):
                 random_graph = erdos_renyi(n, m)

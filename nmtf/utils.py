@@ -2,6 +2,9 @@ import numpy as np
 from itertools import combinations
 
 
+def get_clusters(G):
+    return np.argmax(G, axis=1)
+
 def erdos_renyi(n, m):
     """
     n: int,
@@ -21,7 +24,7 @@ def erdos_renyi(n, m):
 
     return network
 
-def dispersion_coefficient_Kim(X):
+def dispersion_coefficient_rho(X):
     coeff = 0
     for i in range(X.shape[0]):
         for j in range(X.shape[1]):
@@ -29,7 +32,7 @@ def dispersion_coefficient_Kim(X):
     return coeff/X.shape[0]**2
 
 
-def dispersion_coefficients_Dognig(X, k):
+def dispersion_coefficients_eta_v(X, k):
     n = X.shape[0]
     non_diag = (np.ones(shape=X.shape) - np.identity(X.shape[0])).astype(bool)
     ravelled = X[np.where(non_diag)]
@@ -42,6 +45,9 @@ def dispersion_coefficients_Dognig(X, k):
     v = np.sum(aux)
     v /= n*(n-1)*(1/k - 1/k**2)
     return eta, v
+
+
+
 
 def connectivity_matrix(X):
     indices = np.argmax(X, axis=1)
