@@ -9,7 +9,7 @@ from sklearn.base import BaseEstimator
 from sklearn.utils import check_array, check_random_state
 from sklearn.utils.extmath import squared_norm
 
-from .utils import dispersion_coefficient_Kim, dispersion_coefficients_Dognig, \
+from .utils import dispersion_coefficient_rho, dispersion_coefficients_eta_v, \
                     connectivity_matrix
 
 def _init_svd(X_sum, k):
@@ -312,7 +312,7 @@ class SSNMTF_CV(BaseEstimator):
 
             consensus /= self.number_of_repetition
             if self.mode=='kim':
-                coeff = dispersion_coefficient_kim(consensus)
+                coeff = dispersion_coefficient_rho(consensus)
                 if coeff > best_coeff:
                     best_coeff = coeff
                     best_k = k
@@ -320,7 +320,7 @@ class SSNMTF_CV(BaseEstimator):
                 if self.verbose:
                     print("k: %d, dispersion_coefficient: %.4f" %(k, coeff))
             if self.mode == 'dognig':
-                eta, v = dispersion_coefficients_Dognig(consensus, k)
+                eta, v = dispersion_coefficients_eta_v(consensus, k)
                 if eta > best_eta:
                     best_eta = eta
                     best_eta_k = k
