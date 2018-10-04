@@ -11,6 +11,10 @@ from os.path import isfile, join
 
 from nmtf.nmtf import SSNMTF_CV
 from nmtf.read import get_adjacency
+from nmtf.nmtf import SSNMTF_CV, SSNMTF
+from nmtf.read import get_adjacency
+from nmtf.integration import integration_SSNMTF
+from nmtf.thresholding import thresholding_generating_graphs
 
 parent_folder = "/cs/research/bioinf/bionet1/Coexpression_Study/BCStages-SubtypesNetworks/"
 folders = [ "LuminalBNetworks", "Stage2Networks",
