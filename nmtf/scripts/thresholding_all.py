@@ -9,8 +9,10 @@ os.environ["OMP_NUM_THREADS"] = "8"
 from os import listdir
 from os.path import isfile, join
 
-from nmtf.nmtf import SSNMTF_CV
+from nmtf.nmtf import SSNMTF_CV, SSNMTF
 from nmtf.read import get_adjacency
+from nmtf.integration import integration_SSNMTF
+from nmtf.thresholding import thresholding_generating_graphs
 
 parent_folder = "/cs/research/bioinf/bionet1/Coexpression_Study/BCStages-SubtypesNetworks/"
 folders = [ "LuminalBNetworks", "Stage2Networks",
@@ -39,5 +41,5 @@ for i, fold in enumerate(folders):
     res = thresholding_generating_graphs(integrated, min_v=0.01, max_v=0.99,
                     make_plot=False,
                       ax=None, label='', n_repetitions=10)
-    with open("../../"+str(fold)+"_thresholding_results.pkl", 'wb' as f):
+    with open("../../"+str(fold)+"_thresholding_results.pkl", 'wb') as f:
         pkl.dump(res, f)
