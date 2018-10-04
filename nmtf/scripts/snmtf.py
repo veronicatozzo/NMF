@@ -2,6 +2,10 @@
 
 from __future__ import print_function
 import sys, getopt
+import os
+os.environ["MKL_NUM_THREADS"] = "8"
+os.environ["NUMEXPR_NUM_THREADS"] = "8"
+os.environ["OMP_NUM_THREADS"] = "8"
 
 import pickle as pkl
 
