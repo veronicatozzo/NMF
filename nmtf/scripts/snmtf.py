@@ -17,10 +17,13 @@ from nmtf.read import get_adjacency
 
 
 parent_folder = "/cs/research/bioinf/bionet1/Coexpression_Study/BCStages-SubtypesNetworks/"
-folders = ["HER2Networks", "LuminalBNetworks", "Stage2Networks",
-           "Stage4Networks", "LuminalANetworks",  "Stage1Networks",
-           "Stage3Networks",  "TripleNegativeNetworks"]
-ks = [14, 14, 26, 11, 11, 23, 20, 11]
+#folders = ["HER2Networks", "LuminalBNetworks", "Stage2Networks",
+#           "Stage4Networks", "LuminalANetworks",  "Stage1Networks",
+#           "Stage3Networks",  "TripleNegativeNetworks"]
+folders = ["Stage3Networks"]
+#folders =  [ "Stage1Networks", "Stage2Networks", "Stage3Networks", "Stage4Networks"]
+#ks = [14, 14, 26, 11, 11, 23, 20, 11]
+ks = [ 20]
 for i, fold in enumerate(folders):
     print("Analizing group "+fold+"...")
     complete_path = parent_folder + fold
@@ -28,9 +31,9 @@ for i, fold in enumerate(folders):
              if isfile(join(complete_path, f))]
     for f in files:
         graphs = [get_adjacency(f)]
-        est = SSNMTF(ks[i], init='svd', verbose=1)
+        est = SSNMTF(ks[i], init='svd', verbose=0)
         est.fit(graphs)
 
         name = f.split("/")[-1].split('.')[-2]
-        with open("../../results_single/"+fold+".pkl", 'wb') as f:
+        with open("../../results_stage3/"+name+fold+".pkl", 'wb') as f:
             pkl.dump(est, f)

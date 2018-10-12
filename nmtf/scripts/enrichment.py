@@ -1,6 +1,6 @@
 
 
-from __future__ import print_function
+from __future__ import print_function, division
 import sys, getopt
 import os
 os.environ["MKL_NUM_THREADS"] = "8"
@@ -21,31 +21,31 @@ from nmtf.enrichment import enrichment_go, enrichment_kegg
 
 go_annotations = pd.read_table("../../data/goa_human.gaf", sep='\t',
                                skiprows=30, header=None)
-go_annotations = go_annotations.set_index(2)
-go_annotations = go_annotations[(go_annotations[6] == 'EXP') |
+    go_annotations = go_annotations.set_index(2)
+    go_annotations = go_annotations[(go_annotations[6] == 'EXP') |
                                 (go_annotations[6] == 'IDA') |
                                 (go_annotations[6] == 'IPI') |
                                 (go_annotations[6] == 'IMP')]
-go_annotations = go_annotations[go_annotations[8]=='P']
-go_annotations.index = [str(s).lower() for s in go_annotations.index]
-
-with open("../../data/genes_list_networks.pkl", 'rb') as f:
-    genes = pkl.load(f)
-
-intersection = list(set(genes).intersection(set(go_annotations.index)))
-annotations = go_annotations.loc[intersection]
+    go_annotations = go_annotations[go_annotations[8]=='P']
+    go_annotations.index = [str(s).lower() for s in go_annotations.index]
 
 
-folder = "../../results_single2/"
+    intersection = list(set(genes).intersection(set(go_annotations.index)))
+    annotations = go_annotations.loc[intersection]
+
+if kegg:
+    pathways = pd.read_csv("../../pathways_kegg.csv", index_col=0)
+
+folder = "../../results_single2/" #"../../network_integrated/"
 files = [join(folder, f) for f in listdir(folder)
          if isfile(join(folder, f))]
 
 results = []
 for file in files:
+    if file.split('.')[-1] != 'pkl':
+	continue
     with open(file, 'rb') as f:
-    u = pkl._Unpickler(f)
-    u.encoding = 'latin1'
-    p = u.load()
+   	 p = pkl.load(f)
     clusters = get_clusters(p.G_)
     clusters_dim = []
     list_clusters = []
@@ -54,10 +54,12 @@ for file in files:
         genes_c = np.array(genes)[indices_c]
         list_clusters.append(genes_c)
         clusters_dim.append(len(genes_c))
-
-    p_values, percentage = enrichment(list_clusters, clusters_dim, annotations)
+    if go:
+        p_values, percentage = enrichment(list_clusters, clusters_dim, annotations)
+    else:
+        p_values, percentage = enrichment_kegg(list_clusters, clusters_dim, pathways)
     print("Done file "+file+" percentage "+str(percentage))
     results.append((file, p_values, percentage))
 
-with open("../../results_enrichment.pkl", 'wb') as f:
+with open("../../results_enrichment_kegg.pkl", 'wb') as f:
     pkl.dump(results, f)

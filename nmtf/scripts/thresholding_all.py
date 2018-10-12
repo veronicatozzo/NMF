@@ -17,11 +17,11 @@ from nmtf.integration import integration_SSNMTF
 from nmtf.thresholding import thresholding_generating_graphs
 
 parent_folder = "/cs/research/bioinf/bionet1/Coexpression_Study/BCStages-SubtypesNetworks/"
-folders = [ "LuminalBNetworks", "Stage2Networks",
+folders = ["HER2Networks", "LuminalBNetworks", "Stage2Networks",
            "Stage4Networks", "LuminalANetworks",  "Stage1Networks",
            "Stage3Networks",  "TripleNegativeNetworks"]
 
-ks = [14, 26, 11, 11, 23, 20, 11]
+ks = [14, 14, 26, 11, 11, 23, 20, 11]
 
 for i, fold in enumerate(folders):
     print("Analizing group "+fold+"...")
@@ -35,7 +35,7 @@ for i, fold in enumerate(folders):
     est = SSNMTF(k=ks[i], init='svd', verbose=1)
     est.fit(graphs)
     print("fitted NMTF")
-    with open("../../"+str(fold)+".pkl", 'wb') as f:
+    with open("../../results_thresholding1/"+str(fold)+".pkl", 'wb') as f:
         pkl.dump(est, f)
 
     integrated = integration_SSNMTF(est.G_, est.S_, mode='mean')
@@ -43,5 +43,5 @@ for i, fold in enumerate(folders):
     res = thresholding_generating_graphs(integrated, min_v=0.01, max_v=0.99,
                     make_plot=False,
                       ax=None, label='', n_repetitions=10)
-    with open("../../"+str(fold)+"_thresholding_results.pkl", 'wb') as f:
+    with open("../../results_thresholding1/"+str(fold)+"_thresholding_results.pkl", 'wb') as f:
         pkl.dump(res, f)
