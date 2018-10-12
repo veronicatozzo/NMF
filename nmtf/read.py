@@ -14,3 +14,36 @@ def get_adjacency(file):
     M = (M + M.T)/2
     M += np.eye(M.shape[0])
     return M
+
+
+def _read_enrichment_results(single_res, integrated_res):
+    groups = [ "HER2", "LuminalA", "LuminalB", "TripleNegative",
+                "Stage1", "Stage2", "Stage3", "Stage4"]
+    network_type = ["AdaptiveLasso", "Lasso", "aracnea", "aracnem",
+                    "c3net", "clr", "genenet", "Genie3", "mrnetb",
+                    "mrnet", "wgcna", "integrated" ]
+    bars = []
+    for n in network_type:
+        if n =='integrated':
+            continue
+        that_type = []
+        for i in single_res:
+            name = i[0].split('/')[-1].split('.')[-2]
+            if name.startswith(n):
+                if name[len(n)] == 'b':
+                    continue
+                that_type.append((name, i[2]))
+        final_res = []
+        for g in groups:
+            for i, t in enumerate(that_type):
+                if g in t[0]:
+                    final_res.append(t[1])
+        bars.append(final_res)
+
+    integrated = []
+    for g in groups:
+        for i in integrated_res:
+            if g in i[0]:
+                integrated.append(i[2])
+    bars.append(integrated)
+    return bars

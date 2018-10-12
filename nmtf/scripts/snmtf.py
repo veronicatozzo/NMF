@@ -32,5 +32,5 @@ for i, fold in enumerate(folders):
         est.fit(graphs)
 
         name = f.split("/")[-1].split('.')[-2]
-        with open("../../results_single/"+name+".pkl", 'wb') as f:
+        with open("../../results_single/"+fold+".pkl", 'wb') as f:
             pkl.dump(est, f)

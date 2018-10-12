@@ -2,10 +2,34 @@ from __future__ import division
 
 import numpy as np
 from itertools import combinations
+from sklearn.cluster import KMeans
 
+def get_clusters(G, mode='hard'):
+    """
+    Params
+    ------
+    G: array_like, shape=(n, k)
+        The factorization matrix for n samples and k factors.
+    mode: string, optional, default='hard'
+        Modalitiy to perform clustering, default is hard clustering. Options:
+        - 'hard': hard clustering
+        - 'kmeans': kmeans clustering
+        - 'normalization': the columns are normalized (subtraction of mean and
+           rescaled of sd) and then hard clustering is performed
+    """
+    Gc = G.copy()
+    if mode.lower() == 'hard':
+        return np.argmax(G, axis=1)
+    if mode.lower() == 'kmeans':
+        kmeans = KMeans(n_clusters=G.shape[1]).fit(G)
+        return kmeans.labels_
+    if mode.lower() == 'normalization':
+        Gc -= np.mean(Gc, axis=0)
+        Gc /= np.std(Gc, axis=0)
+        return np.argmax(Gc, axis=1)
+    #if mode.lower() == 'sum':
+#        Gc -= np.mean(Gc)
 
-def get_clusters(G):
-    return np.argmax(G, axis=1)
 
 def erdos_renyi(n, m):
     """
