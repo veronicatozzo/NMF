@@ -46,4 +46,4 @@ def _read_enrichment_results(single_res, integrated_res):
             if g in i[0]:
                 integrated.append(i[2])
     bars.append(integrated)
-    return bars
+    return bars, groups, network_type
