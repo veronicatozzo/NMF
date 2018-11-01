@@ -11,7 +11,7 @@ from os import listdir
 from os.path import isfile, join
 
 from nmtf.nmtf import SSNMTF_CV
-from nmtf.read import get_adjacency
+from nmtf.read import get_adjacency, get_adjacency_csv
 
 parent_folder = "/cs/research/bioinf/bionet1/Veronica/NMF/network_inference/networks"
 #folders = ["HER2Networks", "LuminalBNetworks", "Stage2Networks",
@@ -26,7 +26,7 @@ for i, fold in enumerate(folders):
              if isfile(join(complete_path, f))]
     print("... for a total of %d networks.." % len(files))
     print("Getting adjacency matrices..")
-    graphs = [get_adjacency(f) for f in files]
+    graphs = [get_adjacency_csv(f) for f in files]
     print("Starting cross_validation")
     est = SSNMTF_CV(mode='dognig', verbose=1)
     est.fit(graphs)

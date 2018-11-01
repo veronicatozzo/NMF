@@ -15,6 +15,10 @@ def get_adjacency(file):
     M += np.eye(M.shape[0])
     return M
 
+def get_adjacency_csv(file):
+    data = pd.read_csv(file, index_col=0)
+    return data.as_matrix()
+    
 
 def _read_enrichment_results(single_res, integrated_res):
     groups = [ "HER2", "LuminalA", "LuminalB", "TripleNegative",

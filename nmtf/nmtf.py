@@ -327,11 +327,11 @@ class SSNMTF_CV(BaseEstimator):
                 if v > best_v:
                     best_v = v
                     best_v_k = k
-            results[k] = [estimators, consensus, coeff, eta, v]
                 if self.verbose:
                     print("k: %d, dispersion_coefficient: eta %.4f, v %.4f"
                             %(k, eta, v))
-
+            results[k] = [estimators, consensus, coeff, eta, v]
+            
         #if self.mode == 'dognig':
         #    best_k = int((best_eta_k + best_v_k)/2)
         # refit
