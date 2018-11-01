@@ -122,7 +122,7 @@ def _minimize_SSNMTF(X, G, A, L_neg, L_pos, epsilon=1e-10, tol=1e-2, rel_tol=1e-
         if rse <= tol or obj_diff <= rel_tol:
             break
 
-    return_list = [G, S]
+    return_list = [G, S, rse]
     if return_n_iter:
         return_list.append(iter_)
     return return_list
@@ -213,7 +213,7 @@ class SSNMTF(BaseEstimator):
             L_pos.append(np.diag(np.sum(A[i], 1)))
             L_neg.append(A[i])
 
-        self.G_, self.S_, self.n_iter_ = _minimize_SSNMTF(
+        self.G_, self.S_, self.reconstruction_error, self.n_iter_ = _minimize_SSNMTF(
             X, G, A, L_neg, L_pos, epsilon=self.epsilon, tol=self.tol,
              rel_tol=self.rtol, max_iter=self.max_iter,
              verbose= self.verbose, random_state = self.random_state,
@@ -282,15 +282,15 @@ class SSNMTF_CV(BaseEstimator):
         else:
             ks = self.ks
         # cross Validation
-        if self.mode == 'kim':
-            best_coeff = 0
-            best_k = -1
-        if self.mode == 'dognig':
-            best_eta = 0
-            best_eta_k = -1
-            best_v = 0
-            best_v_k = -1
+        #if self.mode == 'kim':
+        best_coeff = 0
         best_k = -1
+        #if self.mode == 'dognig':
+        best_eta = 0
+        best_eta_k = -1
+        best_v = 0
+        best_v_k = -1
+
         results = dict.fromkeys(ks)
         self.input_ = X
         for k in ks:
@@ -327,27 +327,27 @@ class SSNMTF_CV(BaseEstimator):
                 if v > best_v:
                     best_v = v
                     best_v_k = k
-                results[k] = [estimators, consensus, eta, v]
+            results[k] = [estimators, consensus, coeff, eta, v]
                 if self.verbose:
                     print("k: %d, dispersion_coefficient: eta %.4f, v %.4f"
                             %(k, eta, v))
 
-        if self.mode == 'dognig':
-            best_k = int((best_eta_k + best_v_k)/2)
+        #if self.mode == 'dognig':
+        #    best_k = int((best_eta_k + best_v_k)/2)
         # refit
-        best_est = SSNMTF(best_k, self.adjacencies, self.gamma, self.max_iter,
-                     init='svd', epsilon=self.epsilon,
-                     compute_ktt=self.compute_ktt, tol=self.tol,
-                     rtol=self.rtol, verbose=max(self.verbose-1,0),
-                     random_state=self.random_state)
-        best_est.fit(X)
-        self.best_est_ = best_est
+        #best_est = SSNMTF(best_k, self.adjacencies, self.gamma, self.max_iter,
+        #             init='svd', epsilon=self.epsilon,
+        #             compute_ktt=self.compute_ktt, tol=self.tol,
+        #             rtol=self.rtol, verbose=max(self.verbose-1,0),
+        #             random_state=self.random_state)
+        #best_est.fit(X)
+        #self.best_est_ = best_est
         self.G_ = best_est.G_
         self.S_ = best_est.S_
-        self.k = best_k
+        #self.k = best_k
         self.cv_results_ = results
-        if self.mode == 'kim':
-            self.dispersion_coefficient_ = best_coeff
-        else:
-            self.dispersion_coefficient_ = best_v
+        #if self.mode == 'kim':
+        #    self.dispersion_coefficient_ = best_coeff
+        #else:
+        #    self.dispersion_coefficient_ = best_v
         return self

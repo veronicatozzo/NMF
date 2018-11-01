@@ -5,7 +5,6 @@ import sys, getopt
 import pandas as pd
 import numpy as np
 
-from nmtf.utils import get_clusters
 from scipy.stats import hypergeom
 
 

@@ -13,11 +13,11 @@ from os.path import isfile, join
 from nmtf.nmtf import SSNMTF_CV
 from nmtf.read import get_adjacency
 
-parent_folder = "/cs/research/bioinf/bionet1/Coexpression_Study/BCStages-SubtypesNetworks/"
+parent_folder = "/cs/research/bioinf/bionet1/Veronica/NMF/network_inference/networks"
 #folders = ["HER2Networks", "LuminalBNetworks", "Stage2Networks",
 #           "Stage4Networks", "LuminalANetworks",  "Stage1Networks",
 #           "Stage3Networks",  "TripleNegativeNetworks"]
-folders = ["Stage2Networks"]
+#folders = ["Stage2Networks"]
 
 for i, fold in enumerate(folders):
     print("Analizing group "+fold+"...")
