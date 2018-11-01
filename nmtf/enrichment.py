@@ -5,14 +5,12 @@ import sys, getopt
 import pandas as pd
 import numpy as np
 
-from nmtf.utils import get_clusters
 from scipy.stats import hypergeom
-
 
 def enrichment_go5(clusters, dims, annotations):
     N = len(np.unique(annotations.index))
     bonferroni_correction = len(np.unique(annotations['GOterm']))*len(dims)
-    print(len(np.unique(annotations['GOterm'])))
+   # print(len(np.unique(annotations['GOterm'])))
     p_values = []
     genes_to_count = []
     for i, c in enumerate(clusters):
@@ -29,8 +27,8 @@ def enrichment_go5(clusters, dims, annotations):
             #print(N, n, K, k)
             if pval < (0.05/bonferroni_correction):
                 genes_to_count += list(np.unique(ann_c[ann_c['GOterm']==a].index))
-                print(N, n, K, k)
-                print(pval)
+              #  print(N, n, K, k)
+               # print(pval)
                 p_values.append((i, pval, a))
     return p_values, len(set(genes_to_count))/N
 

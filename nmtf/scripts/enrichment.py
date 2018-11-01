@@ -19,29 +19,34 @@ from scipy.stats import hypergeom
 from nmtf.enrichment import enrichment_go, enrichment_kegg, enrichment_go5
 
 
+with open("../../data/genes_list_networks.pkl", 'rb') as f:
+    genes = pkl.load(f)
+genes = [g.lower() for g in genes]
+
 mode='go5'
 if mode=='go5':
-    go_level5 = pd.read_csv("/../../db_GO_level5_big.csv", index_col=0)
+    go_level5 = pd.read_csv("../../data/db_GO_level5_big.csv", index_col=0)
     intersection = list(set(genes).intersection(set(go_level5.index)))
     annotations = go_level5.loc[intersection]
 elif mode=='kegg':
-    pathways = pd.read_csv("../../pathways_kegg.csv", index_col=0)
+    pathways = pd.read_csv("../../data/pathways_kegg.csv", index_col=0)
 else:
     go_annotations = pd.read_table("../../data/goa_human.gaf", sep='\t',
                                    skiprows=30, header=None)
-        go_annotations = go_annotations.set_index(2)
-        go_annotations = go_annotations[(go_annotations[6] == 'EXP') |
+    go_annotations = go_annotations.set_index(2)
+    go_annotations = go_annotations[(go_annotations[6] == 'EXP') |
                                     (go_annotations[6] == 'IDA') |
                                     (go_annotations[6] == 'IPI') |
                                     (go_annotations[6] == 'IMP')]
-        go_annotations = go_annotations[go_annotations[8]=='P']
-        go_annotations.index = [str(s).lower() for s in go_annotations.index]
+    go_annotations = go_annotations[go_annotations[8]=='P']
+    go_annotations.index = [str(s).lower() for s in go_annotations.index]
 
 
-        intersection = list(set(genes).intersection(set(go_annotations.index)))
-        annotations = go_annotations.loc[intersection]
+    intersection = list(set(genes).intersection(set(go_annotations.index)))
+    annotations = go_annotations.loc[intersection]
 
-folder = "../../results_single2/" #"../../network_integrated/"
+folder = "../../network_integrated/"
+#folder = "../../results_single2/"
 files = [join(folder, f) for f in listdir(folder)
          if isfile(join(folder, f))]
 
@@ -68,5 +73,5 @@ for file in files:
     print("Done file "+file+" percentage "+str(percentage))
     results.append((file, p_values, percentage))
 
-with open("../../results_enrichment_go5.pkl", 'wb') as f:
+with open("../../results_enrichment_go5_integrated.pkl", 'wb') as f:
     pkl.dump(results, f)
