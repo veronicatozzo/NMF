@@ -19,18 +19,18 @@ parent_folder = "/cs/research/bioinf/bionet1/Veronica/NMF/network_inference/netw
 #           "Stage3Networks",  "TripleNegativeNetworks"]
 #folders = ["Stage2Networks"]
 
-for i, fold in enumerate(folders):
-    print("Analizing group "+fold+"...")
-    complete_path = parent_folder + fold
-    files = [join(complete_path, f) for f in listdir(complete_path)
-             if isfile(join(complete_path, f))]
-    print("... for a total of %d networks.." % len(files))
-    print("Getting adjacency matrices..")
-    graphs = [get_adjacency(f) for f in files]
-    print("Starting cross_validation")
-    est = SSNMTF_CV(mode='dognig', verbose=1)
-    est.fit(graphs)
+#for i, fold in enumerate(folders):
+#print("Analizing group "+fold+"...")
+complete_path = parent_folder
+files = [join(complete_path, f) for f in listdir(complete_path)
+         if isfile(join(complete_path, f))]
+print("... for a total of %d networks.." % len(files))
+print("Getting adjacency matrices..")
+graphs = [get_adjacency(f) for f in files]
+print("Starting cross_validation")
+est = SSNMTF_CV(mode='dognig', verbose=1)
+est.fit(graphs)
 
-    with open("../../results/cross_val_res"+fold+".pkl", 'wb') as f:
-        pkl.dump(est, f)
+with open("cross_val_res.pkl", 'wb') as f:
+    pkl.dump(est, f)
     print("Finished %d group"%i)
