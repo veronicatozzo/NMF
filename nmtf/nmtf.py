@@ -16,7 +16,9 @@ def _init_svd(X_sum, k):
     """C. Boutsidis and E. Gallopoulos, SVD-based initialization: A head
     start for nonnegative matrix factorization, Pattern Recognition,
     Elsevier"""
-    w, v = np.linalg.eigh(X_sum)
+    print(X_sum.shape)
+    w, v = np.linalg.eigh(X_sum
+    print(v)
     indices = np.argsort(w)[::-1]
     sorted_eigs = w[indices]
     pos_w = np.abs(w)
@@ -206,7 +208,7 @@ class SSNMTF(BaseEstimator):
                 warnings.warn("No initialization specified,"
                               "initializating randomly")
                 G = self.random_state.rand(X[0].shape[0], self.k)
-
+        self.G_init = G
         # graph Regularization
         L_pos, L_neg = list(), list()
         for i in range(len(A)):
@@ -311,27 +313,27 @@ class SSNMTF_CV(BaseEstimator):
                 estimators.append(est)
 
             consensus /= self.number_of_repetition
-            if self.mode=='kim':
-                coeff = dispersion_coefficient_rho(consensus)
-                if coeff > best_coeff:
-                    best_coeff = coeff
-                    best_k = k
-                results[k] = [estimators, consensus, coeff]
-                if self.verbose:
-                    print("k: %d, dispersion_coefficient: %.4f" %(k, coeff))
-            if self.mode == 'dognig':
-                eta, v = dispersion_coefficients_eta_v(consensus, k)
-                if eta > best_eta:
-                    best_eta = eta
-                    best_eta_k = k
-                if v > best_v:
-                    best_v = v
-                    best_v_k = k
-                if self.verbose:
-                    print("k: %d, dispersion_coefficient: eta %.4f, v %.4f"
-                            %(k, eta, v))
+            #if self.mode=='kim':
+            coeff = dispersion_coefficient_rho(consensus)
+            #    if coeff > best_coeff:
+            #        best_coeff = coeff
+            #        best_k = k
+            #    results[k] = [estimators, consensus, coeff]
+            #    if self.verbose:
+            #        print("k: %d, dispersion_coefficient: %.4f" %(k, coeff))
+            #if self.mode == 'dognig':
+            eta, v = dispersion_coefficients_eta_v(consensus, k)
+            #    if eta > best_eta:
+            #        best_eta = eta
+            #        best_eta_k = k
+            #    if v > best_v:
+            #        best_v = v
+            #        best_v_k = k
+            #    if self.verbose:
+            #        print("k: %d, dispersion_coefficient: eta %.4f, v %.4f"
+            #                %(k, eta, v))
             results[k] = [estimators, consensus, coeff, eta, v]
-            
+
         #if self.mode == 'dognig':
         #    best_k = int((best_eta_k + best_v_k)/2)
         # refit
