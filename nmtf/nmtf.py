@@ -5,6 +5,7 @@ import types
 
 import numpy as np
 
+from scipy.linalg import eig
 from sklearn.base import BaseEstimator
 from sklearn.utils import check_array, check_random_state
 from sklearn.utils.extmath import squared_norm
@@ -16,27 +17,26 @@ def _init_svd(X_sum, k):
     """C. Boutsidis and E. Gallopoulos, SVD-based initialization: A head
     start for nonnegative matrix factorization, Pattern Recognition,
     Elsevier"""
-    print(X_sum.shape)
-    w, v = np.linalg.eigh(X_sum
-    print(v)
-    indices = np.argsort(w)[::-1]
-    sorted_eigs = w[indices]
+    w, v = eig(X_sum)
     pos_w = np.abs(w)
-    #trace = np.sum(pos_w)
-    #tr_i = 0
-    #k_new = 1
-    #for i in range(len(w)):
-    #    tr_i += sorted_eigs[i]
-    #    if tr_i/trace > 0.9:
-    #        k_new = i
-    #        break
-    #
-    #k_new = min(k, k_new)
+    indices = np.argsort(w)[::-1]
+    sorted_eigs = pos_w[indices]
+    trace = np.sum(pos_w)
+    tr_i = 0
+    k_new = 1
+    for i in range(len(w)):
+        tr_i += sorted_eigs[i]
+        if tr_i/trace > 0.9:
+            k_new = i
+            break
+
+    k = min(k, k_new)
 
     G = []
     for i in range(k):
-        xx = v[:, i]*pos_w[i]
+        xx = v[:, indices[i]]*pos_w[indices[i]]
         xp = np.maximum(xx, 0)
+        print(xp)
         xn = xp - xx
         if np.linalg.norm(xp) > np.linalg.norm(xn):
             G.append(xp)
