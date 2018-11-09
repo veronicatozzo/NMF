@@ -19,11 +19,11 @@ from scipy.stats import hypergeom
 from nmtf.enrichment import enrichment_go, enrichment_kegg, enrichment_go5
 
 
-with open("../../data/genes_list_networks.pkl", 'rb') as f:
+with open("../../data/list_genes_networks_big.pkl", 'rb') as f:
     genes = pkl.load(f)
-genes = [g.lower() for g in genes]
+#genes = [g.lower() for g in genes]
 
-mode='go5'
+mode='go'
 if mode=='go5':
     go_level5 = pd.read_csv("../../data/db_GO_level5_big.csv", index_col=0)
     intersection = list(set(genes).intersection(set(go_level5.index)))
@@ -45,7 +45,7 @@ else:
     intersection = list(set(genes).intersection(set(go_annotations.index)))
     annotations = go_annotations.loc[intersection]
 
-folder = "../../network_integrated/"
+folder = "../../network_integr_big"
 #folder = "../../results_single2/"
 files = [join(folder, f) for f in listdir(folder)
          if isfile(join(folder, f))]
@@ -65,13 +65,13 @@ for file in files:
         list_clusters.append(genes_c)
         clusters_dim.append(len(genes_c))
     if mode=='go5':
-        p_values, percentage = enrichment_go5(list_clusters, clusters_dim, annotations)
+        p_values, percentage, percentagec = enrichment_go5(list_clusters, clusters_dim, annotations)
     elif mode=='kegg':
-        p_values, percentage = enrichment_kegg(list_clusters, clusters_dim, pathways)
+        p_values, percentage, percentagec = enrichment_kegg(list_clusters, clusters_dim, pathways)
     else:
-        p_values, percentage = enrichment_go(list_clusters, clusters_dim, annotations)
-    print("Done file "+file+" percentage "+str(percentage))
-    results.append((file, p_values, percentage))
+        p_values, percentage, percentagec = enrichment_go(list_clusters, clusters_dim, annotations)
+    print("Done file "+file+" percentage "+str(percentage)+" percentage clusters "+str(percentagec))
+    results.append((file, p_values, percentage, percentagec))
 
-with open("../../results_enrichment_go5_integrated.pkl", 'wb') as f:
+with open("../../results_enrichment_go_networks_big_integr.pkl", 'wb') as f:
     pkl.dump(results, f)

@@ -13,7 +13,9 @@ def enrichment_go5(clusters, dims, annotations):
    # print(len(np.unique(annotations['GOterm'])))
     p_values = []
     genes_to_count = []
+    enriched_clusters = 0
     for i, c in enumerate(clusters):
+        enriched=False
         genes_at_least_one = list(set(annotations.index).intersection(
                                   set(list(c.ravel()))))
         n = len(genes_at_least_one)
@@ -27,10 +29,13 @@ def enrichment_go5(clusters, dims, annotations):
             #print(N, n, K, k)
             if pval < (0.05/bonferroni_correction):
                 genes_to_count += list(np.unique(ann_c[ann_c['GOterm']==a].index))
-              #  print(N, n, K, k)
+                enriched=True
+		 #  print(N, n, K, k)
                # print(pval)
                 p_values.append((i, pval, a))
-    return p_values, len(set(genes_to_count))/N
+        if enriched:
+	    enriched_clusters +=1
+    return p_values, len(set(genes_to_count))/N, enriched_clusters/len(clusters)
 
 
 def enrichment_kegg(clusters, dims, pathways):
@@ -39,7 +44,9 @@ def enrichment_kegg(clusters, dims, pathways):
 
     p_values = []
     genes_to_count = []
+    enriched_clusters = 0
     for i, c in enumerate(clusters):
+        enriched=False       
         genes_at_least_one = list(set(pathways.index).intersection(
                                   set(list(c.ravel()))))
         n = len(genes_at_least_one)
@@ -54,7 +61,10 @@ def enrichment_kegg(clusters, dims, pathways):
             if pval < (0.05/bonferroni_correction):
                 genes_to_count += list(np.unique(ann_c[ann_c['pathway']==p].index))
                 p_values.append((i, pval, p))
-    return p_values, len(set(genes_to_count))/N
+                enriched=True
+        if enriched:
+	     enriched_clusters+=1
+    return p_values, len(set(genes_to_count))/N, enriched_clusters/len(clusters)
 
 
 def enrichment_go(clusters, dims, annotations):
@@ -62,8 +72,10 @@ def enrichment_go(clusters, dims, annotations):
     bonferroni_correction = len(np.unique(annotations[4]))*len(dims)
 
     p_values = []
-    genes_to_count = []
+    genes_to_count = [] 
+    enriched_clusters = 0
     for i, c in enumerate(clusters):
+        enriched=False        
         genes_at_least_one = list(set(annotations.index).intersection(
                                   set(list(c.ravel()))))
         n = len(genes_at_least_one)
@@ -76,4 +88,7 @@ def enrichment_go(clusters, dims, annotations):
             if pval < (0.05/bonferroni_correction):
                 genes_to_count += list(np.unique(ann_c[ann_c[4]==a].index))
                 p_values.append((i, pval, a))
-    return p_values, len(set(genes_to_count))/N
+                enriched=True
+        if enriched:
+            enriched_clusters+=1
+    return p_values, len(set(genes_to_count))/N, enriched_clusters/len(clusters)
