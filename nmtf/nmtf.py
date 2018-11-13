@@ -36,7 +36,6 @@ def _init_svd(X_sum, k):
     for i in range(k):
         xx = v[:, indices[i]]*pos_w[indices[i]]
         xp = np.maximum(xx, 0)
-        print(xp)
         xn = xp - xx
         if np.linalg.norm(xp) > np.linalg.norm(xn):
             G.append(xp)
@@ -179,7 +178,6 @@ class SSNMTF(BaseEstimator):
         history: list
             History of all the iterations.
         """
-
         X = [check_array(x, ensure_min_features=2,
                          ensure_min_samples=2, estimator=self) for x in X]
         assert len(np.unique([x.shape for x in X])) == 1, \
@@ -315,46 +313,12 @@ class SSNMTF_CV(BaseEstimator):
 		mean_re += est.reconstruction_error
             consensus /= self.number_of_repetition
             mean_re /= self.number_of_repetition
-            #if self.mode=='kim':
             coeff = dispersion_coefficient_rho(consensus)
-            #    if coeff > best_coeff:
-            #        best_coeff = coeff
-            #        best_k = k
-            #    results[k] = [estimators, consensus, coeff]
-            #    if self.verbose:
-            #        print("k: %d, dispersion_coefficient: %.4f" %(k, coeff))
-            #if self.mode == 'dognig':
             eta, v = dispersion_coefficients_eta_v(consensus, k)
-            #    if eta > best_eta:
-            #        best_eta = eta
-            #        best_eta_k = k
-            #    if v > best_v:
-            #        best_v = v
-            #        best_v_k = k
-            #    if self.verbose:
-            #        print("k: %d, dispersion_coefficient: eta %.4f, v %.4f"
-            #                %(k, eta, v))
             results[k] = [estimators, consensus, mean_re, coeff, eta, v]
             if self.verbose:
 		 print("k: %d, dispersion_coefficient: eta %.4f, v %.4f"
                             %(k, eta, v)) 
 
-        #if self.mode == 'dognig':
-        #    best_k = int((best_eta_k + best_v_k)/2)
-        # refit
-        #best_est = SSNMTF(best_k, self.adjacencies, self.gamma, self.max_iter,
-        #             init='svd', epsilon=self.epsilon,
-        #             compute_ktt=self.compute_ktt, tol=self.tol,
-        #             rtol=self.rtol, verbose=max(self.verbose-1,0),
-        #             random_state=self.random_state)
-        #best_est.fit(X)
-        #self.best_est_ = best_est
-        #self.G_ = best_est.G_
-        #self.S_ = best_est.S_
-        #self.k = best_k
         self.cv_results_ = results
-        #if self.mode == 'kim':
-        #    self.dispersion_coefficient_ = best_coeff
-        #else:
-        #    self.dispersion_coefficient_ = best_v
         return self
