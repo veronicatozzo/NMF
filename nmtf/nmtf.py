@@ -27,7 +27,7 @@ def _init_svd(X_sum, k):
     for i in range(len(w)):
         tr_i += sorted_eigs[i]
         if tr_i/trace > 0.9:
-            k_new = i
+            k_new = i+1
             break
 
     k = min(k, k_new)
@@ -36,7 +36,6 @@ def _init_svd(X_sum, k):
     for i in range(k):
         xx = v[:, indices[i]]*pos_w[indices[i]]
         xp = np.maximum(xx, 0)
-        print(xp)
         xn = xp - xx
         if np.linalg.norm(xp) > np.linalg.norm(xn):
             G.append(xp)
@@ -57,8 +56,8 @@ def _minimize_SSNMTF(X, G, A, L_neg, L_pos, epsilon=1e-10, tol=1e-2, rel_tol=1e-
                      compute_ktt=False, return_n_iter=False):
     X_norm = np.sum([squared_norm(x) for x in X])
     obj = np.inf
-    GtG = G.T.dot(G) + epsilon
     for iter_ in range(max_iter):
+        GtG = G.T.dot(G) + epsilon
         GtG_inv = np.linalg.pinv(GtG)
 
         # update S
@@ -72,7 +71,7 @@ def _minimize_SSNMTF(X, G, A, L_neg, L_pos, epsilon=1e-10, tol=1e-2, rel_tol=1e-
             RiGSi = X[i].dot(G).dot(S[i])
             RiGSi_p, RiGSi_n = _get_pos_neg(RiGSi)
 
-            SiGtGSi = S[i].dot(G.T).dot(G).dot(S[i])
+            SiGtGSi = S[i].dot(GtG).dot(S[i])
             SiGtGSi_p, SiGtGSi_n = _get_pos_neg(SiGtGSi)
 
             GSiGtGSi_p = G.dot(SiGtGSi_p)
@@ -180,7 +179,7 @@ class SSNMTF(BaseEstimator):
         history: list
             History of all the iterations.
         """
-
+        print('Aaaaaaaaaa')
         X = [check_array(x, ensure_min_features=2,
                          ensure_min_samples=2, estimator=self) for x in X]
         assert len(np.unique([x.shape for x in X])) == 1, \
@@ -344,8 +343,8 @@ class SSNMTF_CV(BaseEstimator):
         #             random_state=self.random_state)
         #best_est.fit(X)
         #self.best_est_ = best_est
-        self.G_ = best_est.G_
-        self.S_ = best_est.S_
+        #self.G_ = best_est.G_
+        #self.S_ = best_est.S_
         #self.k = best_k
         self.cv_results_ = results
         #if self.mode == 'kim':
