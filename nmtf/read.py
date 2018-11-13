@@ -18,8 +18,6 @@ def get_adjacency(file, header='infer'):
     else:
         M = coo_matrix((np.ones(data.shape[0]), (data.iloc[:,0],data.iloc[:,1])),
                         shape=(len(nodes), len(nodes))).todense()
-   # M = (M + M.T)/2
-   # M += np.eye(M.shape[0])
     return M, nodes_to_return
 
 
