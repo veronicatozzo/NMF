@@ -5,6 +5,7 @@ import types
 
 import numpy as np
 
+from scipy.linalg import eig
 from sklearn.base import BaseEstimator
 from sklearn.utils import check_array, check_random_state
 from sklearn.utils.extmath import squared_norm
@@ -16,25 +17,26 @@ def _init_svd(X_sum, k):
     """C. Boutsidis and E. Gallopoulos, SVD-based initialization: A head
     start for nonnegative matrix factorization, Pattern Recognition,
     Elsevier"""
-    w, v = np.linalg.eigh(X_sum)
-    indices = np.argsort(w)[::-1]
-    sorted_eigs = w[indices]
+    w, v = eig(X_sum)
     pos_w = np.abs(w)
-    #trace = np.sum(pos_w)
-    #tr_i = 0
-    #k_new = 1
-    #for i in range(len(w)):
-    #    tr_i += sorted_eigs[i]
-    #    if tr_i/trace > 0.9:
-    #        k_new = i
-    #        break
-    #
-    #k_new = min(k, k_new)
+    indices = np.argsort(w)[::-1]
+    sorted_eigs = pos_w[indices]
+    trace = np.sum(pos_w)
+    tr_i = 0
+    k_new = 1
+    for i in range(len(w)):
+        tr_i += sorted_eigs[i]
+        if tr_i/trace > 0.9:
+            k_new = i+1
+            break
+
+    k = min(k, k_new)
 
     G = []
     for i in range(k):
-        xx = v[:, i]*pos_w[i]
+        xx = v[:, indices[i]]*pos_w[indices[i]]
         xp = np.maximum(xx, 0)
+        print(xp)
         xn = xp - xx
         if np.linalg.norm(xp) > np.linalg.norm(xn):
             G.append(xp)
@@ -55,9 +57,9 @@ def _minimize_SSNMTF(X, G, A, L_neg, L_pos, epsilon=1e-10, tol=1e-2, rel_tol=1e-
                      compute_ktt=False, return_n_iter=False):
     X_norm = np.sum([squared_norm(x) for x in X])
     obj = np.inf
-    GtG = G.T.dot(G) + epsilon
     for iter_ in range(max_iter):
-        GtG_inv = np.linalg.pinv(GtG)
+        GtG = G.T.dot(G) + epsilon
+        GtG_inv = np.linalg.inv(GtG)
 
         # update S
         S = [np.linalg.multi_dot((GtG_inv, G.T, x, G, GtG_inv))
@@ -70,7 +72,7 @@ def _minimize_SSNMTF(X, G, A, L_neg, L_pos, epsilon=1e-10, tol=1e-2, rel_tol=1e-
             RiGSi = X[i].dot(G).dot(S[i])
             RiGSi_p, RiGSi_n = _get_pos_neg(RiGSi)
 
-            SiGtGSi = S[i].dot(G.T).dot(G).dot(S[i])
+            SiGtGSi = S[i].dot(GtG).dot(S[i])
             SiGtGSi_p, SiGtGSi_n = _get_pos_neg(SiGtGSi)
 
             GSiGtGSi_p = G.dot(SiGtGSi_p)
@@ -78,7 +80,6 @@ def _minimize_SSNMTF(X, G, A, L_neg, L_pos, epsilon=1e-10, tol=1e-2, rel_tol=1e-
 
             Gn += RiGSi_p + GSiGtGSi_n
             Gd += RiGSi_n + GSiGtGSi_p + epsilon
-
         for i in range(len(A)):
             Gn += self.gamma[i] * L_neg[i].dot(G)
             Gd += self.gamma[i] * L_pos[i].dot(G)
@@ -206,7 +207,7 @@ class SSNMTF(BaseEstimator):
                 warnings.warn("No initialization specified,"
                               "initializating randomly")
                 G = self.random_state.rand(X[0].shape[0], self.k)
-
+        self.G_init = G
         # graph Regularization
         L_pos, L_neg = list(), list()
         for i in range(len(A)):
@@ -314,7 +315,7 @@ class SSNMTF_CV(BaseEstimator):
 		mean_re += est.reconstruction_error
             consensus /= self.number_of_repetition
             mean_re /= self.number_of_repetition
-           # if self.mode=='kim':
+            #if self.mode=='kim':
             coeff = dispersion_coefficient_rho(consensus)
             #    if coeff > best_coeff:
             #        best_coeff = coeff
@@ -337,6 +338,7 @@ class SSNMTF_CV(BaseEstimator):
             if self.verbose:
 		 print("k: %d, dispersion_coefficient: eta %.4f, v %.4f"
                             %(k, eta, v)) 
+
         #if self.mode == 'dognig':
         #    best_k = int((best_eta_k + best_v_k)/2)
         # refit

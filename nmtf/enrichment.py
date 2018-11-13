@@ -34,7 +34,7 @@ def enrichment_go5(clusters, dims, annotations):
                # print(pval)
                 p_values.append((i, pval, a))
         if enriched:
-	    enriched_clusters +=1
+	        enriched_clusters +=1
     return p_values, len(set(genes_to_count))/N, enriched_clusters/len(clusters)
 
 
@@ -46,7 +46,7 @@ def enrichment_kegg(clusters, dims, pathways):
     genes_to_count = []
     enriched_clusters = 0
     for i, c in enumerate(clusters):
-        enriched=False       
+        enriched=False
         genes_at_least_one = list(set(pathways.index).intersection(
                                   set(list(c.ravel()))))
         n = len(genes_at_least_one)
@@ -63,7 +63,7 @@ def enrichment_kegg(clusters, dims, pathways):
                 p_values.append((i, pval, p))
                 enriched=True
         if enriched:
-	     enriched_clusters+=1
+	        enriched_clusters+=1
     return p_values, len(set(genes_to_count))/N, enriched_clusters/len(clusters)
 
 

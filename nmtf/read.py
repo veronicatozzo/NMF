@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from scipy.sparse import coo_matrix
 
+
 def get_adjacency(file):
     data = pd.read_table(file,  sep=' ')
     nodes = data.iloc[:, 0].tolist() + data.iloc[:, 1].tolist()
@@ -15,10 +16,11 @@ def get_adjacency(file):
     M += np.eye(M.shape[0])
     return M
 
+
 def get_adjacency_csv(file):
     data = pd.read_csv(file, index_col=0)
-    return data.as_matrix()
-    
+    return data.values
+
 
 def _read_enrichment_results(single_res, integrated_res):
     groups = [ "HER2", "LuminalA", "LuminalB", "TripleNegative",
