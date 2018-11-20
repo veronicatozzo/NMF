@@ -1,4 +1,4 @@
-function [S,G, RSE] = SSNMTF(R, A, k, gamma, max_iter, random_init, G0,FOUT, verbose)
+function [S,G,RSE] = SSNMTF(R, A, k, gamma, max_iter,G0,FOUT)
 % Function for solving Graph Regularized Symmetric Non-Negative Matrix Tri-Factorization
 % -------------------------------------------------------------------------------------------------------------
 % 
@@ -19,18 +19,22 @@ function [S,G, RSE] = SSNMTF(R, A, k, gamma, max_iter, random_init, G0,FOUT, ver
 %     G0 ... n x k matrix - initial matrix
 %     FOUT if of output to save the results
 %
+% [In our study]:
+%     R is a cell array containin all the adjacency matrices of the networks to be integrated,
+%     A is not used (an empty cell) = {},
+%     k = 50,
+%     gamma is empty = [],
+%     max_iter = 1000
+%
+%
 % [Output]: 
 %     S: <1D Cell>, k(node types) x k(node types) blocks, compressed matrix (e.g., S{i} = Si, k x k)
 %     G: r x r nonnegative matrix shared over all R_i
 %     RSE: double   RSE = \sum_i||R_i - G*S_i*G^T||^2/\sum_i||R_i||^2  
 % --------------------------------------------------------------------------------------------------------------
 
-if nargin <= 7
+if nargin <= 6
     FOUT = 0;
-end;
-
-if nargin <= 8
-    verbose = 0;
 end;
 
 % order of matrices R_i 
@@ -54,10 +58,8 @@ for i=1:r
 end;
 
 % Random initialization of G matrix
-if random_init ~= 0
 % fprintf('-Initializations of G matrix....\n');
-    G = rand(n,k); 
-else
+% G = rand(n,k); 
 % fprintf('-Initialization of G matrix finished!\n\n');
 % 
 
@@ -66,39 +68,40 @@ else
 %     start for nonnegative matrix factorization, Pattern Recognition,
 %     Elsevier
 
-    if nargin==7
-        G=G0;
-    else
-        [U,D]=eig(Rsum);
-        diagDpos=diag(abs(D));
-        [Dsort,ind]=sort(diagDpos,1,'descend');%
+if nargin==6
+    G=G0;
+else
+    [U,D]=eig(Rsum);
 
-        trD=sum(diagDpos);
-        trDi=0;
-        K=1;
-        for i=1:length(Dsort)
-            trDi = trDi + Dsort(i);
-            if trDi/trD > 0.9
-                K=i
-                break;
-            end;
+    diagDpos=diag(abs(D));
+    [Dsort,ind]=sort(diagDpos,1,'descend');%
+
+    trD=sum(diagDpos);
+    trDi=0;
+    K=1;
+    for i=1:length(Dsort)
+        trDi = trDi + Dsort(i);
+        if trDi/trD > 0.9
+            K=i
+            break;
         end;
-        k=min(k,K);
-        Ginit=[];
-        for i=1:k
-            xx=U(:,ind(i))*diagDpos(ind(i));
-            xp=max(xx,0);
-            xn=xp-xx;
-            if norm(xp)>norm(xn)
-              Ginit = [Ginit xp];
-            else
-              Ginit = [Ginit xn];
-            end
-        end;
-        Gzeros=Ginit<1e-10;
-        G=Ginit+1e-10*Gzeros;
     end;
+    k=min(k,K);
+    Ginit=[];
+    for i=1:k
+        xx=U(:,ind(i))*diagDpos(ind(i));
+        xp=max(xx,0);
+        xn=xp-xx;
+        if norm(xp)>norm(xn)
+          Ginit = [Ginit xp];
+        else
+          Ginit = [Ginit xn];
+        end
+    end;
+    Gzeros=Ginit<1e-10;
+    G=Ginit+1e-10*Gzeros;
 end;
+
 
 %Graph Regularization
 a=length(A);
@@ -112,9 +115,7 @@ J_old = 0; %initialization
 %Iterations 
 RSE = 1;
 
-if verbose
-    fprintf('| Iteration | Delta_R |  RSE | Rel_Var_Cost | KKT_err | Time \n');
-end;
+fprintf('| Iteration | Delta_R |  RSE | Rel_Var_Cost | KKT_err | Time \n');
 if FOUT
     fprintf(FOUT,'| Iteration | Delta_R | RSE | Rel_Var_Cost | KKT_err | Time \n');
 end;
@@ -211,9 +212,7 @@ for iter=1:max_iter
         KKT_err=max(max(norm(Err1,'fro'),norm(Err2,'fro')),Err3);
         % Writing output
         ttoc=toc;
-        if verbose
-            fprintf('%d %0.5e %0.5e %0.5e %0.5e %0.5e\n', iter,  J_new, RSE, rel_var,KKT_err,ttoc);
-        end;
+        fprintf('%d %0.5e %0.5e %0.5e %0.5e %0.5e\n', iter,  J_new, RSE, rel_var,KKT_err,ttoc);
         if FOUT
           fprintf(FOUT,'%d %0.5e %0.5e %0.5e %0.5e %0.5e\n', iter,  J_new, RSE, rel_var,KKT_err,ttoc);
         end;
@@ -227,3 +226,4 @@ for iter=1:max_iter
 
 end; 
 %keyboard;
+
