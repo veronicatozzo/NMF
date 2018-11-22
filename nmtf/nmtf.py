@@ -51,19 +51,18 @@ def _get_pos_neg(X):
     return (abs + X)/2., (abs - X)/2.
 
 
-def _minimize_SSNMTF(X, G, A, L_neg, L_pos, epsilon=1e-10, tol=1e-2, rel_tol=1e-8,
-                     max_iter= 200, verbose=0, random_state = None,
+def _minimize_SSNMTF(X, G, A, L_neg, L_pos, weights=[], tol=1e-2, rel_tol=1e-8,
+                     max_iter= 200, verbose=0, random_state = None, epsilon=1e-10,
                      compute_ktt=False, return_n_iter=False):
     X_norm = np.sum([squared_norm(x) for x in X])
     obj = np.inf
+    epsilon = np.spacing(1)
     for iter_ in range(max_iter):
-        GtG = G.T.dot(G) + epsilon
+        GtG = G.T.dot(G) + epsilon*np.eye(G.shape[1])
         GtG_inv = np.linalg.inv(GtG)
-
         # update S
-        S = [np.linalg.multi_dot((GtG_inv, G.T, x, G, GtG_inv))
-             for x in X]
-
+        S = [w*np.linalg.multi_dot((GtG_inv, G.T, x, G, GtG_inv))
+             for w, x in zip(weights,X)]
         # update G
         Gn = np.zeros_like(G)
         Gd = np.zeros_like(G)
@@ -77,8 +76,9 @@ def _minimize_SSNMTF(X, G, A, L_neg, L_pos, epsilon=1e-10, tol=1e-2, rel_tol=1e-
             GSiGtGSi_p = G.dot(SiGtGSi_p)
             GSiGtGSi_n =  G.dot(SiGtGSi_n)
 
-            Gn += RiGSi_p + GSiGtGSi_n
-            Gd += RiGSi_n + GSiGtGSi_p + epsilon
+            Gn += weights[i] * (RiGSi_p + GSiGtGSi_n)
+            Gd += weights[i] * (RiGSi_n + GSiGtGSi_p + epsilon)
+           
         for i in range(len(A)):
             Gn += self.gamma[i] * L_neg[i].dot(G)
             Gd += self.gamma[i] * L_pos[i].dot(G)
@@ -86,7 +86,7 @@ def _minimize_SSNMTF(X, G, A, L_neg, L_pos, epsilon=1e-10, tol=1e-2, rel_tol=1e-
         G *= np.sqrt(Gn/Gd)
 
         #computing RSE
-        rel_error = np.sum([squared_norm(X[i] - G.dot(S[i]).dot(G.T))
+        rel_error = np.sum([weights[i]*squared_norm(X[i] - G.dot(S[i]).dot(G.T))
                            for i in range(len(X))])
         penalty = np.sum([gamma[i]*np.trace(G.T.dot(L_pos[i] - L_neg[i]).dot(G))
                          for i in range(len(A))])
@@ -96,7 +96,7 @@ def _minimize_SSNMTF(X, G, A, L_neg, L_pos, epsilon=1e-10, tol=1e-2, rel_tol=1e-
         rse = rel_error/X_norm
         obj_old = obj
         obj = rel_error + penalty
-        obj_diff = np.abs((obj_old - obj))/np.abs(obj_old)
+        obj_diff = np.abs((obj_old - obj))/np.abs(obj_old) if iter_>0 else np.inf
 
         #KKT error
         if compute_ktt:
@@ -141,11 +141,12 @@ class SSNMTF(BaseEstimator):
         if G_init is set is bypassed
     """
 
-    def __init__(self, k, adjacencies=None, gamma=0, max_iter=500, G_init=None,
+    def __init__(self, k, adjacencies=None, weights=[], gamma=0, max_iter=500, G_init=None,
                  init='SVD', epsilon=1e-10, compute_ktt=False, tol=1e-2, rtol=1e-8,
                  verbose=0, random_state=None):
         self.k = k
         self.adjacencies = adjacencies
+        self.weights = weights
         self.gamma = gamma
         self.max_iter = max_iter
         self.G_init = G_init
@@ -178,6 +179,10 @@ class SSNMTF(BaseEstimator):
         history: list
             History of all the iterations.
         """
+        if type(X) is np.ndarray:
+            X = [check_array(X, ensure_min_features=2,
+                         ensure_min_samples=2, estimator=self)]
+        # TODO check symmetry of matrices in X
         X = [check_array(x, ensure_min_features=2,
                          ensure_min_samples=2, estimator=self) for x in X]
         assert len(np.unique([x.shape for x in X])) == 1, \
@@ -192,7 +197,13 @@ class SSNMTF(BaseEstimator):
             A = []
 
         self.random_state = check_random_state(self.random_state)
-
+        
+        if len(self.weights) != 0 and len(self.weights) != len(X):
+            raise ValueError("You provided %d weights but the number of input "
+                             "matrices is %d. You must provide a weight for"
+                             "each matrix."%(len(self.weights), len(X)))
+        elif len(self.weights) == 0:
+            self.weights = list(np.ones(len(X)))
         # initialization
         if self.G_init is not None:
             G = G_init
@@ -200,12 +211,13 @@ class SSNMTF(BaseEstimator):
             if self.init == 'random':
                 G = self.random_state.rand(X[0].shape[0], self.k)
             elif str(self.init).upper() == 'SVD':
-                G = _init_svd(np.sum(X, 0), self.k)
+                G = _init_svd(np.sum([x*w for x, w in zip(X, self.weights)], 0), self.k)
             else:
                 warnings.warn("No initialization specified,"
                               "initializating randomly")
                 G = self.random_state.rand(X[0].shape[0], self.k)
-        self.G_init = G
+        self.G_init = G.copy()
+        
         # graph Regularization
         L_pos, L_neg = list(), list()
         for i in range(len(A)):
@@ -213,7 +225,7 @@ class SSNMTF(BaseEstimator):
             L_neg.append(A[i])
 
         self.G_, self.S_, self.reconstruction_error, self.n_iter_ = _minimize_SSNMTF(
-            X, G, A, L_neg, L_pos, epsilon=self.epsilon, tol=self.tol,
+            X, G, A, L_neg, L_pos, weights=self.weights, epsilon=self.epsilon, tol=self.tol,
              rel_tol=self.rtol, max_iter=self.max_iter,
              verbose= self.verbose, random_state = self.random_state,
              compute_ktt=self.compute_ktt, return_n_iter = True)
@@ -298,26 +310,26 @@ class SSNMTF_CV(BaseEstimator):
             mean_re = 0
             for rep_ in range(self.number_of_repetition):
                 print(rep_)
-		with warnings.catch_warnings():
-                    warnings.simplefilter('ignore', RuntimeWarning)
-                    est = SSNMTF(k, self.adjacencies, self.gamma, self.max_iter,
-                                 init='random', epsilon=self.epsilon,
-                                 compute_ktt=self.compute_ktt, tol=self.tol,
-                                 rtol=self.rtol, verbose=max(self.verbose-1,0),
-                                 random_state=self.random_state)
-                    est.fit(X)
+        with warnings.catch_warnings():
+                warnings.simplefilter('ignore', RuntimeWarning)
+                est = SSNMTF(k, self.adjacencies, self.gamma, self.max_iter,
+                             init='random', epsilon=self.epsilon,
+                             compute_ktt=self.compute_ktt, tol=self.tol,
+                             rtol=self.rtol, verbose=max(self.verbose-1,0),
+                             random_state=self.random_state)
+                est.fit(X)
 
                 C = connectivity_matrix(est.G_)
                 consensus += C
                 estimators.append(est)
-		mean_re += est.reconstruction_error
-            consensus /= self.number_of_repetition
-            mean_re /= self.number_of_repetition
-            coeff = dispersion_coefficient_rho(consensus)
-            eta, v = dispersion_coefficients_eta_v(consensus, k)
-            results[k] = [estimators, consensus, mean_re, coeff, eta, v]
-            if self.verbose:
-		 print("k: %d, dispersion_coefficient: eta %.4f, v %.4f"
+        mean_re += est.reconstruction_error
+        consensus /= self.number_of_repetition
+        mean_re /= self.number_of_repetition
+        coeff = dispersion_coefficient_rho(consensus)
+        eta, v = dispersion_coefficients_eta_v(consensus, k)
+        results[k] = [estimators, consensus, mean_re, coeff, eta, v]
+        if self.verbose:
+            print("k: %d, dispersion_coefficient: eta %.4f, v %.4f"
                             %(k, eta, v)) 
 
         self.cv_results_ = results
